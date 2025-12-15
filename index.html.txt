@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Report Order Shopee</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Poppins',sans-serif;background:#f3f4f6}
+    .container{padding:20px}
+    h1{margin:0}
+    .subtitle{color:#6b7280;margin-bottom:20px}
+
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}
+    .card{background:#fff;padding:20px;border-radius:14px;box-shadow:0 10px 20px rgba(0,0,0,.05)}
+    .card h3{margin:0;font-size:14px;color:#6b7280}
+    .card p{margin:5px 0 0;font-size:22px;font-weight:600}
+
+    .toolbar{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+    .toolbar input,.toolbar select{padding:8px;border-radius:10px;border:1px solid #d1d5db}
+
+    .table-wrap{background:#fff;border-radius:14px;padding:15px;box-shadow:0 10px 20px rgba(0,0,0,.05);overflow-x:auto}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;text-align:center;border-bottom:1px solid #e5e7eb}
+    th{background:#f9fafb;font-size:13px}
+    input,select{width:100%;padding:6px;border:1px solid #d1d5db;border-radius:8px}
+
+    .btn{background:#2563eb;color:#fff;border:none;padding:10px 15px;border-radius:10px;cursor:pointer}
+    .btn:hover{background:#1d4ed8}
+
+    .status-packing{background:#fef3c7}
+    .status-dikirim{background:#dbeafe}
+    .status-selesai{background:#dcfce7}
+    .status-return{background:#fee2e2}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Dashboard Order Shopee</h1>
+  <div class="subtitle">Monitoring order & profit penjualan</div>
+
+  <div class="cards">
+    <div class="card"><h3>Total Order</h3><p id="totalOrder">0</p></div>
+    <div class="card"><h3>Total Margin</h3><p id="totalMargin">Rp 0</p></div>
+    <div class="card"><h3>Order Selesai</h3><p id="orderSelesai">0</p></div>
+    <div class="card"><h3>Return</h3><p id="orderReturn">0</p></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="date" id="filterDate" onchange="applyFilter()">
+    <select id="filterStatus" onchange="applyFilter()">
+      <option value="">Semua Status</option>
+      <option value="packing">Packing</option>
+      <option value="dikirim">Dikirim</option>
+      <option value="selesai">Selesai</option>
+      <option value="return">Return</option>
+    </select>
+    <button class="btn" onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="tableOrder">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>No Pesanan</th>
+          <th>Produk</th>
+          <th>Modal</th>
+          <th>Jual</th>
+          <th>Margin</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <br>
+    <button class="btn" onclick="addRow()">+ Tambah Order</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY='shopee_orders';
+
+function saveData(){
+  const rows=document.querySelectorAll('#tableOrder tbody tr');
+  const data=[];
+  rows.forEach(r=>{
+    data.push({
+      tanggal:r.cells[0].querySelector('input').value,
+      pesanan:r.cells[1].querySelector('input').value,
+      produk:r.cells[2].querySelector('input').value,
+      modal:r.cells[3].querySelector('input').value,
+      jual:r.cells[4].querySelector('input').value,
+      margin:r.querySelector('.margin').innerText,
+      status:r.querySelector('select').value
+    });
+  });
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+
+function loadData(){
+  const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+  data.forEach(d=>addRow(d));
+}
+
+function addRow(data={}){
+  const tbody=document.querySelector('#tableOrder tbody');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="date" value="${data.tanggal||''}"></td>
+    <td><input type="text" value="${data.pesanan||''}"></td>
+    <td><input type="text" value="${data.produk||''}"></td>
+    <td><input type="number" value="${data.modal||''}" oninput="calc(this)"></td>
+    <td><input type="number" value="${data.jual||''}" oninput="calc(this)"></td>
+    <td class="margin">${data.margin||0}</td>
+    <td>
+      <select onchange="updateStatus(this)">
+        <option value="packing">Packing</option>
+        <option value="dikirim">Dikirim</option>
+        <option value="selesai">Selesai</option>
+        <option value="return">Return</option>
+      </select>
+    </td>
+    <td><button onclick="this.closest('tr').remove();updateDashboard();saveData()">Hapus</button></td>`;
+  tbody.appendChild(tr);
+  tr.querySelector('select').value=data.status||'packing';
+  updateStatus(tr.querySelector('select'));
+  updateDashboard();
+  saveData();
+}
+
+function calc(el){
+  const row=el.closest('tr');
+  const modal=Number(row.cells[3].querySelector('input').value||0);
+  const jual=Number(row.cells[4].querySelector('input').value||0);
+  row.querySelector('.margin').innerText=jual-modal;
+  updateDashboard();
+  saveData();
+}
+
+function updateStatus(select){
+  const row=select.closest('tr');
+  row.className='';
+  row.classList.add('status-'+select.value);
+  updateDashboard();
+  saveData();
+}
+
+function updateDashboard(){
+  const rows=document.querySelectorAll('#tableOrder tbody tr');
+  let totalMargin=0,selesai=0,ret=0;
+  rows.forEach(r=>{
+    totalMargin+=Number(r.querySelector('.margin').innerText||0);
+    const status=r.querySelector('select').value;
+    if(status==='selesai')selesai++;
+    if(status==='return')ret++;
+  });
+  document.getElementById('totalOrder').innerText=rows.length;
+  document.getElementById('totalMargin').innerText='Rp '+totalMargin.toLocaleString('id-ID');
+  document.getElementById('orderSelesai').innerText=selesai;
+  document.getElementById('orderReturn').innerText=ret;
+}
+
+function applyFilter(){
+  const date=document.getElementById('filterDate').value;
+  const status=document.getElementById('filterStatus').value;
+  document.querySelectorAll('#tableOrder tbody tr').forEach(r=>{
+    const rDate=r.cells[0].querySelector('input').value;
+    const rStatus=r.querySelector('select').value;
+    let show=true;
+    if(date&&rDate!==date)show=false;
+    if(status&&rStatus!==status)show=false;
+    r.style.display=show?'':'none';
+  });
+}
+
+function exportCSV(){
+  let csv='Tanggal,No Pesanan,Produk,Modal,Jual,Margin,Status\n';
+  document.querySelectorAll('#tableOrder tbody tr').forEach(r=>{
+    csv+=`${r.cells[0].querySelector('input').value},${r.cells[1].querySelector('input').value},${r.cells[2].querySelector('input').value},${r.cells[3].querySelector('input').value},${r.cells[4].querySelector('input').value},${r.querySelector('.margin').innerText},${r.querySelector('select').value}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='report-shopee.csv';
+  a.click();
+}
+
+window.onload=loadData;
+</script>
+</body>
+</html>
