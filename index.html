@@ -14,43 +14,41 @@ body{margin:0;font-family:'Segoe UI',Arial;background:var(--bg);color:var(--text
 
 /* LOGIN */
 .login{max-width:360px;margin:90px auto;background:var(--card);padding:25px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.15);text-align:center}
-.login h2{margin:0 0 10px}
 
 /* HEADER */
 .header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.08);position:sticky;top:0;z-index:10}
-.header h1{font-size:18px;margin:0}
-.header button{margin-left:8px}
 
-/* LAYOUT */
-.container{padding:20px;max-width:1200px;margin:auto}
+/* SIDEBAR */
+.layout{display:flex}
+.sidebar{width:220px;background:var(--card);min-height:100vh;box-shadow:2px 0 10px rgba(0,0,0,.08)}
+.sidebar h3{text-align:center;padding:15px;margin:0;border-bottom:1px solid #eee}
+.sidebar button{width:100%;padding:14px;border:none;background:none;text-align:left;cursor:pointer}
+.sidebar button.active,.sidebar button:hover{background:var(--primary);color:#fff}
 
-/* STAT CARDS */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px}
-.stat{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 8px 20px rgba(0,0,0,.08);position:relative;overflow:hidden}
-.stat small{opacity:.7}
-.stat h2{margin:6px 0 0;font-size:26px}
-.stat::after{content:'';position:absolute;right:-40px;top:-40px;width:120px;height:120px;background:var(--primary);opacity:.1;border-radius:50%}
+/* CONTENT */
+.content{flex:1;padding:20px}
 
-/* CHART */
-.chart-box{background:var(--card);padding:20px;border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.08);margin-bottom:20px}
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.stat{background:var(--card);padding:18px;border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+.stat h2{margin:5px 0}
 
-/* CONTROLS */
-.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
-input,select,button{padding:10px;border-radius:10px;border:1px solid #ccc}
-button{background:var(--primary);color:#fff;border:none;cursor:pointer}
-button.secondary{background:#607d8b}
+/* BOX */
+.box{background:var(--card);padding:20px;border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.08);margin-bottom:20px}
 
 /* TABLE */
-.table-box{background:var(--card);border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.08);overflow:auto}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px;text-align:center;border-bottom:1px solid #eee}
 th{background:var(--primary);color:#fff;position:sticky;top:0}
 tr.status-Selesai{background:#e8f5e9}
 tr.status-Return{background:#fdecea}
 
-@media(max-width:600px){
-.header h1{font-size:16px}
-}
+/* CONTROLS */
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+input,select,button{padding:10px;border-radius:10px;border:1px solid #ccc}
+button{background:var(--primary);color:#fff;border:none;cursor:pointer}
+
+@media(max-width:768px){.layout{flex-direction:column}.sidebar{width:100%;display:flex}.sidebar button{text-align:center}}
 </style>
 </head>
 <body>
@@ -58,7 +56,6 @@ tr.status-Return{background:#fdecea}
 <!-- LOGIN -->
 <div class="login" id="loginBox">
 <h2>🔐 Dashboard Shopee</h2>
-<p>Masuk untuk mengelola laporan order</p>
 <input type="password" id="pass" placeholder="Password admin">
 <button onclick="login()">Login</button>
 <p style="font-size:12px">Default: <b>admin123</b></p>
@@ -67,87 +64,86 @@ tr.status-Return{background:#fdecea}
 <!-- APP -->
 <div id="app" class="hidden">
 <div class="header">
-<h1>📦 Shopee Order Dashboard</h1>
+<b>📦 Shopee Dashboard</b>
 <div>
-<button class="secondary" onclick="toggleDark()">🌙</button>
+<button onclick="toggleDark()">🌙</button>
 <button onclick="logout()">Logout</button>
 </div>
 </div>
 
-<div class="container">
+<div class="layout">
+<div class="sidebar">
+<h3>MENU</h3>
+<button class="active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+<button onclick="showPage('analytics',this)">📈 Analytics</button>
+<button onclick="showPage('orders',this)">📋 Orders</button>
+<button onclick="showPage('report',this)">📄 Report</button>
+</div>
 
-<!-- STATS -->
+<div class="content">
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page">
 <div class="stats">
 <div class="stat"><small>Total Order</small><h2 id="totalOrder">0</h2></div>
 <div class="stat"><small>Total Margin</small><h2 id="totalMargin">Rp0</h2></div>
-<div class="stat"><small>Order Selesai</small><h2 id="selesai">0</h2></div>
-<div class="stat"><small>Order Return</small><h2 id="retur">0</h2></div>
+<div class="stat"><small>Selesai</small><h2 id="selesai">0</h2></div>
+<div class="stat"><small>Return</small><h2 id="retur">0</h2></div>
+</div>
 </div>
 
-<!-- CHART -->
-<div class="chart-box">
-<canvas id="chart" height="90"></canvas>
+<!-- ANALYTICS -->
+<div id="analytics" class="page hidden">
+<div class="box">
+<h3>📊 Grafik Margin</h3>
+<canvas id="chart" height="100"></canvas>
+</div>
 </div>
 
-<!-- CONTROLS -->
+<!-- ORDERS -->
+<div id="orders" class="page hidden">
+<div class="box">
+<h3>📋 Data Pesanan</h3>
 <div class="controls">
-<button onclick="addRow()">➕ Tambah Order</button>
+<button onclick="addRow()">➕ Tambah</button>
 <input type="file" onchange="importCSV(this)">
-<button onclick="exportCSV()">⬇ Export CSV</button>
-<select id="filterStatus" onchange="render()">
-<option value="">Semua Status</option>
-<option>Packing</option>
-<option>Dikirim</option>
-<option>Selesai</option>
-<option>Return</option>
-</select>
+<button onclick="exportCSV()">⬇ Export</button>
+<select id="filterStatus" onchange="render()"><option value="">Semua Status</option><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select>
 <input type="date" id="filterDate" onchange="render()">
 </div>
-
-<!-- TABLE -->
-<div class="table-box">
-<table id="tbl">
-<thead>
-<tr><th>Tanggal</th><th>No Pesanan</th><th>Produk</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th>❌</th></tr>
-</thead>
-<tbody></tbody>
-</table>
+<table id="tbl"><thead><tr><th>Tgl</th><th>No</th><th>Produk</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th>❌</th></tr></thead><tbody></tbody></table>
+</div>
 </div>
 
-<p style="font-size:12px;margin-top:10px">☁️ Export CSV → Import ke Google Sheets</p>
+<!-- REPORT -->
+<div id="report" class="page hidden">
+<div class="box">
+<h3>📄 Export & Backup</h3>
+<p>Gunakan fitur Export CSV untuk Google Sheets</p>
+<button onclick="exportCSV()">Export Semua Data</button>
+</div>
+</div>
+
+</div>
 </div>
 </div>
 
 <script>
 const KEY='shopee_pro';let data=[],chart;
-
 function login(){if(pass.value==='admin123'){loginBox.classList.add('hidden');app.classList.remove('hidden');load();}}
 function logout(){location.reload()}
 function toggleDark(){document.body.classList.toggle('dark')}
-
+function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
 function addRow(d={}){data.push({t:d.t||'',p:d.p||'',pr:d.pr||'',m:d.m||0,j:d.j||0,s:d.s||'Packing'});save()}
-
-function render(){const tb=tbl.querySelector('tbody');tb.innerHTML='';let tm=0,s=0,r=0;
-const fs=filterStatus.value,fd=filterDate.value;
-data.filter(x=>(!fs||x.s===fs)&&(!fd||x.t===fd)).forEach((x,i)=>{
-const g=x.j-x.m;tm+=g;if(x.s==='Selesai')s++;if(x.s==='Return')r++;
-const tr=document.createElement('tr');tr.className='status-'+x.s;
-tr.innerHTML=`<td><input type=date value='${x.t}' onchange='upd(${i},"t",this.value)'></td><td><input value='${x.p}' onchange='upd(${i},"p",this.value)'></td><td><input value='${x.pr}' onchange='upd(${i},"pr",this.value)'></td><td><input type=number value='${x.m}' onchange='upd(${i},"m",this.value)'></td><td><input type=number value='${x.j}' onchange='upd(${i},"j",this.value)'></td><td>${g}</td><td><select onchange='upd(${i},"s",this.value)'><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td><td><button onclick='delRow(${i})'>X</button></td>`;
-tr.querySelector('select').value=x.s;tb.appendChild(tr)
-});
-totalOrder.innerText=data.length;totalMargin.innerText='Rp'+tm.toLocaleString('id-ID');selesai.innerText=s;retur.innerText=r;drawChart()}
-
+function render(){const tb=tbl.querySelector('tbody');tb.innerHTML='';let tm=0,s=0,r=0;const fs=filterStatus.value,fd=filterDate.value;data.filter(x=>(!fs||x.s===fs)&&(!fd||x.t===fd)).forEach((x,i)=>{const g=x.j-x.m;tm+=g;if(x.s==='Selesai')s++;if(x.s==='Return')r++;const tr=document.createElement('tr');tr.className='status-'+x.s;tr.innerHTML=`<td><input type=date value='${x.t}' onchange='upd(${i},"t",this.value)'></td><td><input value='${x.p}' onchange='upd(${i},"p",this.value)'></td><td><input value='${x.pr}' onchange='upd(${i},"pr",this.value)'></td><td><input type=number value='${x.m}' onchange='upd(${i},"m",this.value)'></td><td><input type=number value='${x.j}' onchange='upd(${i},"j",this.value)'></td><td>${g}</td><td><select onchange='upd(${i},"s",this.value)'><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td><td><button onclick='delRow(${i})'>X</button></td>`;tr.querySelector('select').value=x.s;tb.appendChild(tr)});totalOrder.innerText=data.length;totalMargin.innerText='Rp'+tm.toLocaleString('id-ID');selesai.innerText=s;retur.innerText=r;drawChart()}
 function upd(i,k,v){data[i][k]=k==='m'||k==='j'?+v:v;save()}
 function delRow(i){data.splice(i,1);save()}
 function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
 function load(){data=JSON.parse(localStorage.getItem(KEY)||'[]');render()}
-
-function drawChart(){if(chart)chart.destroy();chart=new Chart(chartEl(),{type:'line',data:{labels:data.map((_,i)=>i+1),datasets:[{label:'Margin',data:data.map(x=>x.j-x.m),borderColor:'#ff5722',backgroundColor:'rgba(255,87,34,.2)',tension:.3}]},options:{responsive:true}})}
-function chartEl(){return document.getElementById('chart')}
-
-function exportCSV(){let c='Tanggal,Pesanan,Produk,Modal,Jual,Status\n';data.forEach(x=>{c+=`${x.t},${x.p},${x.pr},${x.m},${x.j},${x.s}\n`});download(c,'shopee-report.csv')}
+function drawChart(){if(chart)chart.destroy();chart=new Chart(document.getElementById('chart'),{type:'line',data:{labels:data.map((_,i)=>i+1),datasets:[{label:'Margin',data:data.map(x=>x.j-x.m),borderColor:'#ff5722',backgroundColor:'rgba(255,87,34,.2)',tension:.3}]}})}
+function exportCSV(){let c='Tanggal,Pesanan,Produk,Modal,Jual,Status\n';data.forEach(x=>{c+=`${x.t},${x.p},${x.pr},${x.m},${x.j},${x.s}\n`});dl(c,'shopee-report.csv')}
 function importCSV(i){const r=new FileReader();r.onload=e=>{e.target.result.split('\n').slice(1).forEach(l=>{const x=l.split(',');if(x.length>4)addRow({t:x[0],p:x[1],pr:x[2],m:+x[3],j:+x[4],s:x[5]})})};r.readAsText(i.files[0])}
-function download(c,n){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c]));a.download=n;a.click()}
+function dl(c,n){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c]));a.download=n;a.click()}
 </script>
 </body>
 </html>
