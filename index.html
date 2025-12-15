@@ -69,7 +69,7 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 <!-- APP -->
 <div id="app" class="hidden">
 <div class="header">
-<b>📦 Shopee report Dashboard</b>
+<b>📦 Shopee Report Dashboard</b>
 <div>
 <button onclick="toggleDark()">🌙</button>
 <button onclick="logout()">Logout</button>
@@ -93,8 +93,13 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 <div class="stats">
 <div class="stat"><small>Total Order</small><h2 id="totalOrder">0</h2></div>
 <div class="stat"><small>Total Margin</small><h2 id="totalMargin">Rp0</h2></div>
+<div class="stat"><small>Packing</small><h2 id="packing">0</h2></div>
+<div class="stat"><small>Dikirim</small><h2 id="dikirim">0</h2></div>
 <div class="stat"><small>Selesai</small><h2 id="selesai">0</h2></div>
-<div class="stat"><small>Dikirim</small><h2 id="Dikirim">0</h2></div>
+<div class="stat"><small>Return</small><h2 id="retur">0</h2></div>
+</div>
+<div class="stat"><small>Total Margin</small><h2 id="totalMargin">Rp0</h2></div>
+<div class="stat"><small>Selesai</small><h2 id="selesai">0</h2></div>
 <div class="stat"><small>Return</small><h2 id="retur">0</h2></div>
 </div>
 </div>
@@ -103,11 +108,11 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 <div id="analytics" class="page hidden">
 <div class="box">
 <h3>📊 Grafik Profit Harian</h3>
-<canvas id="chartProfit" height="20"></canvas>
+<canvas id="chartProfit" height="75"></canvas>
 </div>
 <div class="box">
 <h3>📦 Grafik Status Order</h3>
-<canvas id="chartStatus" height="20"></canvas>
+<canvas id="chartStatus" height="75"></canvas>
 </div>
 </div>
 
@@ -154,7 +159,7 @@ function logout(){location.reload()}
 function toggleDark(){document.body.classList.toggle('dark')}
 function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
 function addRow(d={}){data.push({t:d.t||'',p:d.p||'',pr:d.pr||'',m:d.m||0,j:d.j||0,s:d.s||'Packing'});save()}
-function render(){const tb=tbl.querySelector('tbody');tb.innerHTML='';let tm=0,s=0,r=0;const fs=filterStatus.value,fd=filterDate.value;data.filter(x=>(!fs||x.s===fs)&&(!fd||x.t===fd)).forEach((x,i)=>{const g=x.j-x.m;tm+=g;if(x.s==='Selesai')s++;if(x.s==='Return')r++;const tr=document.createElement('tr');tr.className='status-'+x.s;tr.innerHTML=`<td><input type=date value='${x.t}' onchange='upd(${i},"t",this.value)'></td><td><input value='${x.p}' onchange='upd(${i},"p",this.value)'></td><td><input value='${x.pr}' onchange='upd(${i},"pr",this.value)'></td><td><input type=number value='${x.m}' onchange='upd(${i},"m",this.value)'></td><td><input type=number value='${x.j}' onchange='upd(${i},"j",this.value)'></td><td>${g}</td><td><select onchange='upd(${i},"s",this.value)'><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td><td><button onclick='delRow(${i})'>X</button></td>`;tr.querySelector('select').value=x.s;tb.appendChild(tr)});totalOrder.innerText=data.length;totalMargin.innerText='Rp'+tm.toLocaleString('id-ID');selesai.innerText=s;retur.innerText=r;drawCharts()}
+function render(){const tb=tbl.querySelector('tbody');tb.innerHTML='';let tm=0,s=0,r=0,p=0,d=0;const fs=filterStatus.value,fd=filterDate.value;data.filter(x=>(!fs||x.s===fs)&&(!fd||x.t===fd)).forEach((x,i)=>{const g=x.j-x.m;tm+=g;if(x.s==='Selesai')s++;if(x.s==='Return')r++;if(x.s==='Packing')p++;if(x.s==='Dikirim')d++;const tr=document.createElement('tr');tr.className='status-'+x.s;tr.innerHTML=`<td><input type=date value='${x.t}' onchange='upd(${i},"t",this.value)'></td><td><input value='${x.p}' onchange='upd(${i},"p",this.value)'></td><td><input value='${x.pr}' onchange='upd(${i},"pr",this.value)'></td><td><input type=number value='${x.m}' onchange='upd(${i},"m",this.value)'></td><td><input type=number value='${x.j}' onchange='upd(${i},"j",this.value)'></td><td>${g}</td><td><select onchange='upd(${i},"s",this.value)'><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td><td><button onclick='delRow(${i})'>X</button></td>`;tr.querySelector('select').value=x.s;tb.appendChild(tr)});totalOrder.innerText=data.length;totalMargin.innerText='Rp'+tm.toLocaleString('id-ID');packing.innerText=p;dikirim.innerText=d;selesai.innerText=s;retur.innerText=r;drawCharts()}
 function upd(i,k,v){data[i][k]=k==='m'||k==='j'?+v:v;save()}
 function delRow(i){data.splice(i,1);save()}
 function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
@@ -172,8 +177,3 @@ function dl(c,n){const a=document.createElement('a');a.href=URL.createObjectURL(
 </script>
 </body>
 </html>
-
-
-
-
-
