@@ -136,4 +136,55 @@ function addRow(data = {}) {
 <td><button onclick="this.closest('tr').remove();updateDashboard();saveData()">Hapus</button></td>
 `;
   tbody.appendChild(tr);
-  tr.querySelector('select').
+  tr.querySelector('select').value = data.status || 'packing';
+  updateStatus(tr.querySelector('select'));
+  updateDashboard();
+  saveData();
+}
+
+function calc(el){
+  const row = el.closest('tr');
+  const modal = +row.cells[3].querySelector('input').value || 0;
+  const jual = +row.cells[4].querySelector('input').value || 0;
+  row.querySelector('.margin').innerText = jual - modal;
+  updateDashboard();
+  saveData();
+}
+
+function updateStatus(sel){
+  const row = sel.closest('tr');
+  row.className = 'status-' + sel.value;
+  updateDashboard();
+  saveData();
+}
+
+function updateDashboard(){
+  const rows = document.querySelectorAll('#tableOrder tbody tr');
+  let margin=0, selesai=0, ret=0;
+  rows.forEach(r=>{
+    margin += +r.querySelector('.margin').innerText || 0;
+    if(r.querySelector('select').value==='selesai') selesai++;
+    if(r.querySelector('select').value==='return') ret++;
+  });
+  totalOrder.innerText = rows.length;
+  totalMargin.innerText = 'Rp ' + margin.toLocaleString('id-ID');
+  orderSelesai.innerText = selesai;
+  orderReturn.innerText = ret;
+}
+
+function exportCSV(){
+  let csv='Tanggal,Pesanan,Produk,Modal,Jual,Margin,Status\n';
+  document.querySelectorAll('#tableOrder tbody tr').forEach(r=>{
+    csv+=`${r.cells[0].querySelector('input').value},${r.cells[1].querySelector('input').value},${r.cells[2].querySelector('input').value},${r.cells[3].querySelector('input').value},${r.cells[4].querySelector('input').value},${r.querySelector('.margin').innerText},${r.querySelector('select').value}\n`;
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv]));
+  a.download='report-shopee.csv';
+  a.click();
+}
+
+window.onload = loadData;
+</script>
+
+</body>
+</html>
