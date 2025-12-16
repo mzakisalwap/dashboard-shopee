@@ -6,45 +6,84 @@
 <title>Dashboard Shopee</title>
 
 <style>
-body{font-family:Arial;background:#f4f6fb}
-#loginBox{width:320px;margin:120px auto;background:#fff;padding:20px;border-radius:12px}
-input,button{width:100%;padding:10px;margin:8px 0}
-button{background:#6c63ff;color:#fff;border:none}
-#app{display:none;padding:20px}
-table{border-collapse:collapse;margin-top:20px}
-td,th{border:1px solid #ccc;padding:6px}
+body{margin:0;font-family:Arial;background:#f4f6fb}
+.hidden{display:none}
+#loginBox{width:340px;margin:120px auto;background:#fff;padding:24px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+#loginBox h3{text-align:center}
+input,select,button{width:100%;padding:10px;margin:8px 0}
+button{background:#6c63ff;color:#fff;border:none;border-radius:8px;cursor:pointer}
+#app{padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;margin:20px 0}
+.card{background:#fff;padding:15px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden}
+th,td{padding:8px;border-bottom:1px solid #eee;text-align:center;font-size:13px}
+th{background:#eef1ff}
+.status-Packing{background:#fff3cd}
+.status-Dikirim{background:#d1ecf1}
+.status-Selesai{background:#d4edda}
+.status-Return{background:#f8d7da}
+.btn-danger{background:#e74c3c}
+.btn-small{padding:6px;font-size:12px}
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="loginBox">
-  <h3>Login</h3>
+  <h3>Login Dashboard</h3>
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
 
-<div id="app">
-  <h2>Dashboard</h2>
-  <p id="roleInfo"></p>
-  <button onclick="logout()">Logout</button>
+<!-- APP -->
+<div id="app" class="hidden">
 
-  <h3>Tambah Order</h3>
+  <div class="header">
+    <h2>Dashboard Shopee</h2>
+    <div>
+      <span id="roleInfo"></span> |
+      <span id="today"></span>
+      <button class="btn-small" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard">
+    <div class="card">Total Order<br><b id="totalOrder">0</b></div>
+    <div class="card">Packing<br><b id="packing">0</b></div>
+    <div class="card">Dikirim<br><b id="dikirim">0</b></div>
+    <div class="card">Selesai<br><b id="selesai">0</b></div>
+    <div class="card">Return<br><b id="retur">0</b></div>
+    <div class="card">Total Profit<br><b id="profit">Rp 0</b></div>
+  </div>
+
+  <!-- ORDER -->
+  <h3>📦 Data Order</h3>
   <button onclick="addOrder()">+ Tambah Order</button>
 
-  <table>
+  <table id="orderTable">
     <thead>
       <tr>
-        <th>Tanggal</th><th>No</th><th>Produk</th>
-        <th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th>
+        <th>Tanggal</th>
+        <th>No Pesanan</th>
+        <th>Produk</th>
+        <th>Modal</th>
+        <th>Jual</th>
+        <th>Margin</th>
+        <th>Status</th>
+        <th>Aksi</th>
       </tr>
     </thead>
     <tbody id="orderBody"></tbody>
   </table>
+
 </div>
 
 <script>
+/* ================= USER ================= */
 var USERS = [
   {username:"owner", password:"owner123", role:"owner"},
   {username:"admin", password:"admin123", role:"admin"},
@@ -53,6 +92,7 @@ var USERS = [
 
 var orders = [];
 
+/* ================= LOGIN ================= */
 function login(){
   var u=document.getElementById("username").value;
   var p=document.getElementById("password").value;
@@ -61,67 +101,117 @@ function login(){
   for(var i=0;i<USERS.length;i++){
     if(USERS[i].username===u && USERS[i].password===p){
       found=USERS[i];
-      loadOrders();
-
     }
   }
 
-  if(!found){ alert("Login gagal"); return; }
+  if(!found){
+    alert("Login gagal");
+    return;
+  }
 
   document.getElementById("loginBox").style.display="none";
-  document.getElementById("app").style.display="block";
+  document.getElementById("app").classList.remove("hidden");
   document.getElementById("roleInfo").innerText="Role: "+found.role;
+  document.getElementById("today").innerText=new Date().toLocaleDateString("id-ID");
+
+  loadOrders();
+  updateDashboard();
 }
 
-function logout(){ location.reload(); }
+function logout(){
+  location.reload();
+}
 
+/* ================= ORDER ================= */
 function addOrder(){
-  orders.push({modal:0,jual:0,status:"Packing"});
+  orders.push({
+    tanggal:"",
+    no:"",
+    produk:"",
+    modal:0,
+    jual:0,
+    status:"Packing"
+  });
+  saveOrders();
   renderOrders();
 }
 
 function renderOrders(){
   var body=document.getElementById("orderBody");
   body.innerHTML="";
-  saveOrders();
-
 
   for(var i=0;i<orders.length;i++){
-    var m=orders[i].jual-orders[i].modal;
-    body.innerHTML+=
-      "<tr>"+
-      "<td><input type='date'></td>"+
-      "<td><input></td>"+
-      "<td><input></td>"+
-      "<td><input type='number'></td>"+
-      "<td><input type='number'></td>"+
-      "<td>"+m+"</td>"+
-      "<td><select><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td>"+
-      "</tr>";
+    var o=orders[i];
+    var margin=o.jual-o.modal;
+
+    var tr=document.createElement("tr");
+    tr.className="status-"+o.status;
+
+    tr.innerHTML=
+      "<td><input type='date' value='"+o.tanggal+"' onchange='updateField("+i+",\"tanggal\",this.value)'></td>"+
+      "<td><input value='"+o.no+"' onchange='updateField("+i+",\"no\",this.value)'></td>"+
+      "<td><input value='"+o.produk+"' onchange='updateField("+i+",\"produk\",this.value)'></td>"+
+      "<td><input type='number' value='"+o.modal+"' onchange='updateField("+i+",\"modal\",this.value)'></td>"+
+      "<td><input type='number' value='"+o.jual+"' onchange='updateField("+i+",\"jual\",this.value)'></td>"+
+      "<td>"+margin+"</td>"+
+      "<td><select onchange='updateField("+i+",\"status\",this.value)'>"+
+        "<option "+(o.status==="Packing"?"selected":"")+">Packing</option>"+
+        "<option "+(o.status==="Dikirim"?"selected":"")+">Dikirim</option>"+
+        "<option "+(o.status==="Selesai"?"selected":"")+">Selesai</option>"+
+        "<option "+(o.status==="Return"?"selected":"")+">Return</option>"+
+      "</select></td>"+
+      "<td><button class='btn-danger btn-small' onclick='deleteOrder("+i+")'>Hapus</button></td>";
+
+    body.appendChild(tr);
   }
-  <script>
-/* === SIMPAN & LOAD DATA === */
-function addOrder(){
-  orders.push({modal:0,jual:0,status:"Packing"});
-  saveOrders();
-  renderOrders();
-  
+
+  updateDashboard();
 }
 
+function updateField(i,field,value){
+  if(field==="modal"||field==="jual"){value=Number(value)||0;}
+  orders[i][field]=value;
+  saveOrders();
+  renderOrders();
+}
+
+function deleteOrder(i){
+  orders.splice(i,1);
+  saveOrders();
+  renderOrders();
+}
+
+/* ================= DASHBOARD ================= */
+function updateDashboard(){
+  var p=0,pa=0,di=0,se=0,re=0;
+
+  for(var i=0;i<orders.length;i++){
+    p+=orders[i].jual-orders[i].modal;
+    if(orders[i].status==="Packing")pa++;
+    if(orders[i].status==="Dikirim")di++;
+    if(orders[i].status==="Selesai")se++;
+    if(orders[i].status==="Return")re++;
+  }
+
+  document.getElementById("totalOrder").innerText=orders.length;
+  document.getElementById("packing").innerText=pa;
+  document.getElementById("dikirim").innerText=di;
+  document.getElementById("selesai").innerText=se;
+  document.getElementById("retur").innerText=re;
+  document.getElementById("profit").innerText="Rp "+p.toLocaleString("id-ID");
+}
+
+/* ================= STORAGE ================= */
+function saveOrders(){
+  localStorage.setItem("orders",JSON.stringify(orders));
 }
 
 function loadOrders(){
-  var data = localStorage.getItem("orders");
-  if(data){
-    orders = JSON.parse(data);
-    renderOrders();
-  }
-}
-</script>
-
+  var data=localStorage.getItem("orders");
+  if(data){orders=JSON.parse(data);}
+  renderOrders();
 }
 </script>
 
 </body>
 </html>
-
