@@ -1,61 +1,27 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Order Shopee</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- FIX favicon -->
+<title>Dashboard Shopee</title>
 <link rel="icon" href="data:,">
-
-<!-- ChartJS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#f4f6fb}
-
-/* LOGIN */
-.login-box{
-  width:320px;margin:120px auto;background:#fff;
-  padding:20px;box-shadow:0 0 10px rgba(0,0,0,.1)
-}
-input,select,button{
-  width:100%;padding:8px;margin:6px 0
-}
-button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
-
-/* DASHBOARD */
+.login-box{width:320px;margin:120px auto;background:#fff;padding:20px}
+input,select,button{width:100%;padding:8px;margin:6px 0}
+button{background:#4f46e5;color:#fff;border:none}
 .dashboard{display:none}
-.sidebar{
-  width:220px;background:#1e293b;color:#fff;
-  height:100vh;position:fixed;top:0;left:0
-}
-.sidebar h3{text-align:center;padding:10px}
-.sidebar a{
-  display:block;color:#fff;padding:12px;text-decoration:none;
-  cursor:pointer
-}
+.sidebar{width:220px;background:#1e293b;color:#fff;height:100vh;position:fixed}
+.sidebar a{display:block;color:#fff;padding:12px;text-decoration:none}
 .sidebar a:hover{background:#334155}
-
 .content{margin-left:220px;padding:20px}
-
-.card{
-  background:#fff;padding:15px;margin-bottom:20px
-}
+.card{background:#fff;padding:15px;margin-bottom:20px}
 .hidden{display:none}
-
-/* TABLE */
 table{width:100%;border-collapse:collapse}
-th,td{
-  border:1px solid #ddd;padding:8px;text-align:center
-}
+th,td{border:1px solid #ddd;padding:8px;text-align:center}
 th{background:#4f46e5;color:#fff}
-
-/* STATUS WARNA */
-.status{
-  padding:4px 10px;border-radius:12px;
-  color:#fff;font-size:12px;font-weight:bold
-}
+.status{padding:4px 10px;border-radius:12px;color:#fff;font-size:12px}
 .packing{background:#facc15;color:#000}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
@@ -65,166 +31,110 @@ th{background:#4f46e5;color:#fff}
 
 <body>
 
-<!-- LOGIN -->
 <div class="login-box" id="loginBox">
-  <h3>Login Dashboard</h3>
-  <input id="loginId" placeholder="ID User">
-  <input id="loginPass" type="password" placeholder="Password">
-  <button id="btnLogin">Login</button>
-  <p id="loginMsg" style="color:red;text-align:center"></p>
+<h3>Login</h3>
+<input id="loginId" placeholder="ID">
+<input id="loginPass" type="password" placeholder="Password">
+<button id="btnLogin">Login</button>
+<p id="loginMsg" style="color:red"></p>
 </div>
 
-<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
-
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <h3>MENU</h3>
-    <a onclick="showPage('input')">Input Order</a>
-    <a onclick="showPage('table')">Tabel Order</a>
-    <a onclick="showPage('chart')">Grafik Bulanan</a>
-    <a onclick="logout()">Logout</a>
-  </div>
-
-  <!-- CONTENT -->
-  <div class="content">
-
-    <!-- INPUT -->
-    <div class="card" id="input">
-      <h3>Input Order Shopee</h3>
-      <input type="date" id="tanggal">
-      <input type="time" id="waktu">
-      <input placeholder="No Pesanan" id="no">
-      <input placeholder="Nama Produk" id="produk">
-      <input type="number" placeholder="Harga Modal" id="modal">
-      <input type="number" placeholder="Harga Jual" id="jual">
-      <select id="status">
-        <option value="packing">Packing</option>
-        <option value="dikirim">Dikirim</option>
-        <option value="selesai">Selesai</option>
-        <option value="return">Return</option>
-      </select>
-      <button onclick="tambahOrder()">Simpan Order</button>
-    </div>
-
-    <!-- TABLE -->
-    <div class="card hidden" id="table">
-      <h3>Data Order</h3>
-      <input type="month" id="filterBulan" onchange="renderTable()">
-      <table>
-        <thead>
-          <tr>
-            <th>Tanggal</th><th>Waktu</th><th>No</th><th>Produk</th>
-            <th>Modal</th><th>Jual</th><th>Profit</th><th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-
-    <!-- CHART -->
-    <div class="card hidden" id="chart">
-      <h3>Grafik Profit Bulanan</h3>
-      <canvas id="profitChart"></canvas>
-    </div>
-
-  </div>
+<div class="sidebar">
+<a onclick="showPage('input')">Input Order</a>
+<a onclick="showPage('table')">Tabel Order</a>
+<a onclick="showPage('chart')">Grafik</a>
+<a onclick="logout()">Logout</a>
 </div>
-  <script>
-document.getElementById("btnLogin").addEventListener("click", login)
-</script>
-</body>
 
-<!-- SCRIPT PALING BAWAH (PENTING) -->
+<div class="content">
+
+<div class="card" id="input">
+<input type="date" id="tanggal">
+<input type="time" id="waktu">
+<input id="no" placeholder="No Pesanan">
+<input id="produk" placeholder="Produk">
+<input id="modal" type="number" placeholder="Modal">
+<input id="jual" type="number" placeholder="Jual">
+<select id="status">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>
+<button onclick="tambahOrder()">Simpan</button>
+</div>
+
+<div class="card hidden" id="table">
+<table>
+<thead>
+<tr><th>Tanggal</th><th>No</th><th>Produk</th><th>Profit</th><th>Status</th></tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<div class="card hidden" id="chart">
+<canvas id="profitChart"></canvas>
+</div>
+
+</div>
+</div>
+
 <script>
-const users=[
-  {id:"owner01",password:"owner123",role:"owner"},
-  {id:"admin01",password:"admin123",role:"admin"},
-  {id:"staff01",password:"staff123",role:"staff"}
+var users=[
+{id:"owner01",password:"owner123",role:"owner"},
+{id:"admin01",password:"admin123",role:"admin"},
+{id:"staff01",password:"staff123",role:"staff"}
 ]
 
-let roleUser=""
-let orders=[]
-let chart=null
+var orders=[]
+var roleUser=""
+var chart=null
 
-function login(){
-  const id=document.getElementById("loginId").value
-  const pass=document.getElementById("loginPass").value
-  const msg=document.getElementById("loginMsg")
+document.getElementById("btnLogin").onclick=function(){
+var id=document.getElementById("loginId").value
+var pass=document.getElementById("loginPass").value
+var msg=document.getElementById("loginMsg").innerHTML=""
 
-  const user=users.find(u=>u.id===id && u.password===pass)
-  if(!user){
-    msg.innerText="ID atau Password salah!"
-    return
-  }
-
-  roleUser=user.role
-  document.getElementById("loginBox").style.display="none"
-  document.getElementById("dashboard").style.display="block"
-
-  if(roleUser==="staff"){
-    document.querySelector('a[onclick="showPage(\'chart\')"]').style.display="none"
-  }
+for(var i=0;i<users.length;i++){
+if(users[i].id===id && users[i].password===pass){
+roleUser=users[i].role
+document.getElementById("loginBox").style.display="none"
+document.getElementById("dashboard").style.display="block"
+return
+}
+}
+document.getElementById("loginMsg").innerHTML="ID atau Password salah"
 }
 
 function logout(){location.reload()}
 
 function showPage(id){
-  document.querySelectorAll(".card").forEach(c=>c.classList.add("hidden"))
-  document.getElementById(id).classList.remove("hidden")
-  if(id==="table")renderTable()
-  if(id==="chart")renderChart()
+var cards=document.getElementsByClassName("card")
+for(var i=0;i<cards.length;i++)cards[i].className="card hidden"
+document.getElementById(id).className="card"
 }
 
 function tambahOrder(){
-  if(!tanggal.value||!waktu.value||!no.value) return alert("Data belum lengkap")
-
-  const modal=Number(modal.value)
-  const jual=Number(jual.value)
-
-  orders.push({
-    tanggal:tanggal.value,
-    waktu:waktu.value,
-    no:no.value,
-    produk:produk.value,
-    modal, jual,
-    profit:jual-modal,
-    status:status.value
-  })
-
-  alert("Order berhasil disimpan")
+orders.push({
+tanggal:document.getElementById("tanggal").value,
+no:document.getElementById("no").value,
+produk:document.getElementById("produk").value,
+profit:document.getElementById("jual").value-document.getElementById("modal").value,
+status:document.getElementById("status").value
+})
+renderTable()
 }
 
 function renderTable(){
-  tbody.innerHTML=""
-  const f=filterBulan.value
-  orders.filter(o=>!f||o.tanggal.startsWith(f)).forEach(o=>{
-    tbody.innerHTML+=`
-    <tr>
-      <td>${o.tanggal}</td>
-      <td>${o.waktu}</td>
-      <td>${o.no}</td>
-      <td>${o.produk}</td>
-      <td>${o.modal}</td>
-      <td>${o.jual}</td>
-      <td>${roleUser==="staff"?"-":o.profit}</td>
-      <td><span class="status ${o.status}">${o.status}</span></td>
-    </tr>`
-  })
+var html=""
+for(var i=0;i<orders.length;i++){
+html+="<tr><td>"+orders[i].tanggal+"</td><td>"+orders[i].no+"</td><td>"+orders[i].produk+"</td><td>"+orders[i].profit+"</td><td><span class='status "+orders[i].status+"'>"+orders[i].status+"</span></td></tr>"
 }
+document.getElementById("tbody").innerHTML=html
+}
+</script>
 
-function renderChart(){
-  if(chart) chart.destroy()
-  let data={}
-  orders.forEach(o=>{
-    const b=o.tanggal.slice(0,7)
-    data[b]=(data[b]||0)+o.profit
-  })
-  chart=new Chart(profitChart,{
-    type:"bar",
-    data:{
-      labels:Object.keys(da
-  }
-   </script>
-
-
+</body>
+</html>
