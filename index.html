@@ -119,15 +119,33 @@ th{background:#4f46e5;color:#fff}
 </div>
 
 <script>
+ const users = [
+{ id:"owner01", password:"owner123", role:"owner" },
+{ id:"admin01", password:"admin123", role:"admin" },
+{ id:"staff01", password:"staff123", role:"staff" }
+   
 let roleUser=""
 let orders=[]
 
 function login(){
-  roleUser=document.getElementById("role").value
+  const id=document.getElementById("loginId").value
+  const pass=document.getElementById("loginPass").value
+  const msg=document.getElementById("loginMsg")
+
+  const user=users.find(u=>u.id===id && u.password===pass)
+
+  if(!user){
+    msg.innerText="ID atau Password salah!"
+    return
+  }
+
+  roleUser=user.role
   document.getElementById("loginBox").style.display="none"
   document.getElementById("dashboard").style.display="block"
+
+  // Hak akses
   if(roleUser==="staff"){
-    document.getElementById("chart").style.display="none"
+    document.querySelector('[onclick="show(\'chart\')"]').style.display="none"
   }
 }
 
@@ -145,4 +163,5 @@ function tambahOrder(){
   let jual=+jualEl.value
   orders.push({
     tangga
+
 
