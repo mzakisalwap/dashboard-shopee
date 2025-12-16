@@ -2,142 +2,143 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shopee Business System – Final</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<title>Dashboard Bisnis Shopee</title>
 <style>
-:root{--primary:#6366f1;--bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b}
-body{margin:0;font-family:Inter,Arial;background:var(--bg);color:var(--text)}
-header{background:linear-gradient(135deg,#6366f1,#22d3ee);color:#fff;padding:20px}
-.container{padding:20px}
-.hidden{display:none}
-.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.card{background:var(--card);padding:20px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
-.card h3{margin:0;font-size:14px;color:var(--muted)}
-.card p{margin-top:8px;font-size:26px;font-weight:600}
-.controls{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
-input,select,button{padding:10px;border-radius:10px;border:1px solid #e5e7eb}
-button{background:linear-gradient(135deg,#6366f1,#22d3ee);color:#fff;border:none;cursor:pointer}
-table{width:100%;border-collapse:separate;border-spacing:0 10px}
-th,td{padding:12px;text-align:left}
-tbody tr{background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.06)}
-.status-packing{background:#fef3c7}
-.status-dikirim{background:#e0f2fe}
-.status-selesai{background:#dcfce7}
-.status-return{background:#fee2e2}
-.warning{outline:3px solid red}
-.login{max-width:360px;margin:80px auto;background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+body{font-family:Arial;background:#f4f6fb;margin:0}
+#loginBox{max-width:350px;margin:100px auto;background:#fff;padding:25px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+#loginBox input,#loginBox button{width:100%;padding:10px;margin:8px 0}
+#loginBox button{background:#6c63ff;color:#fff;border:none;border-radius:8px;cursor:pointer}
+#app{display:none;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center}
+.card{background:#fff;padding:15px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.08);margin:10px}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.admin-only{background:#ff6b6b;color:#fff}
+.staff-hide{display:none}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:center}
+select,input{padding:6px}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="login">
-<h2>Login Sistem</h2>
-<input id="user" placeholder="Username"><br><br>
-<input id="pass" type="password" placeholder="Password"><br><br>
-<button onclick="login()">Login</button>
-<p id="loginErr" style="color:red"></p>
+<div id="loginBox">
+  <h2>Login Dashboard</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
-<div id="app" class="hidden">
-<header>
-<h1>Shopee Business System</h1>
-<div id="today"></div>
-</header>
-<div class="container">
+<div id="app">
+  <div class="header">
+    <h2>Dashboard Bisnis Shopee</h2>
+    <div>
+      <span id="roleInfo"></span>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
 
-<div class="controls">
-<select id="storeFilter"></select>
-<select id="monthFilter"></select>
-<select id="yearFilter"></select>
-<input id="search" placeholder="Cari order / produk" oninput="render()">
-<button onclick="exportPDF()">Export PDF</button>
-<button onclick="logout()">Logout</button>
-</div>
+  <div class="dashboard">
+    <div class="card">Total Order<br><b id="totalOrder">0</b></div>
+    <div class="card">Packing<br><b id="packing">0</b></div>
+    <div class="card">Dikirim<br><b id="dikirim">0</b></div>
+    <div class="card">Selesai<br><b id="selesai">0</b></div>
+    <div class="card">Return<br><b id="retur">0</b></div>
+    <div class="card">Total Profit<br><b id="profit">Rp 0</b></div>
+  </div>
 
-<div class="dashboard">
-<div class="card"><h3>Total Order</h3><p id="totalOrder">0</p></div>
-<div class="card"><h3>Packing</h3><p id="packing">0</p></div>
-<div class="card"><h3>Dikirim</h3><p id="dikirim">0</p></div>
-<div class="card"><h3>Selesai</h3><p id="selesai">0</p></div>
-<div class="card"><h3>Return</h3><p id="retur">0</p></div>
-<div class="card"><h3>Total Profit</h3><p id="profit">Rp 0</p></div>
-</div>
+  <div class="card">
+    <button onclick="addRow()">+ Tambah Order</button>
+    <button class="admin-only" onclick="exportCSV()">Export CSV</button>
+    <table id="tableOrder">
+      <thead>
+        <tr>
+          <th>Tanggal</th><th>No Pesanan</th><th>Produk</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th class="admin-only">Aksi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-<h3>Tambah Order</h3>
-<div class="controls">
-<input type="date" id="tgl">
-<input placeholder="No Pesanan" id="no">
-<input placeholder="Produk" id="produk">
-<input placeholder="Kategori" id="kategori">
-<input type="number" placeholder="Modal" id="modal">
-<input type="number" placeholder="Jual" id="jual">
-<select id="status"><option>packing</option><option>dikirim</option><option>selesai</option><option>return</option></select>
-<select id="store"></select>
-<button onclick="add()">Tambah</button>
-</div>
-
-<h3>Daftar Order</h3>
-<table>
-<thead><tr><th>Tgl</th><th>No</th><th>Produk</th><th>Kategori</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th>Toko</th></tr></thead>
-<tbody id="tbody"></tbody>
-</table>
-
-<h3>Grafik Profit Bulanan</h3>
-<canvas id="chart"></canvas>
-
-</div>
 </div>
 
 <script>
-// ===== AUTH =====
-const USERS=[{u:'owner',p:'12345',r:'owner'},{u:'admin',p:'12345',r:'admin'},{u:'staff',p:'12345',r:'staff'}];
-function login(){const u=user.value,p=pass.value;const f=USERS.find(x=>x.u===u&&x.p===p);if(!f){loginErr.innerText='Login gagal';return;}localStorage.setItem('role',f.r);login.classList.add('hidden');app.classList.remove('hidden');init();}
+const USERS_KEY="shopee_users";
+const ORDER_KEY="shopee_orders";
+
+if(!localStorage.getItem(USERS_KEY)){
+  localStorage.setItem(USERS_KEY,JSON.stringify([
+    {username:"owner",password:"owner123",role:"owner"},
+    {username:"admin",password:"admin123",role:"admin"},
+    {username:"staff",password:"staff123",role:"staff"}
+  ]));
+}
+
+function login(){
+  const u=document.getElementById('username').value;
+  const p=document.getElementById('password').value;
+  const users=JSON.parse(localStorage.getItem(USERS_KEY));
+  const found=users.find(x=>x.username===u&&x.password===p);
+  if(!found)return alert('Login salah');
+  localStorage.setItem('currentUser',JSON.stringify(found));
+  document.getElementById('loginBox').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('roleInfo').innerText='Role: '+found.role;
+  applyRole(found.role);
+  loadOrders();
+}
+
 function logout(){localStorage.clear();location.reload();}
 
-// ===== DATA =====
-let data=JSON.parse(localStorage.getItem('orders')||'[]');
-let stores=['Shopee Utama','Shopee Affiliate'];
-const tbody=document.getElementById('tbody');
-
-document.getElementById('today').innerText=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-function init(){storeFilter.innerHTML=store.innerHTML=stores.map(s=>`<option>${s}</option>`).join('');render();buildChart();}
-
-function add(){
- const o={tgl:tgl.value,no:no.value,produk:produk.value,kategori:kategori.value,modal:+modal.value,jual:+jual.value,status:status.value,store:store.value};
- data.push(o);save();}
-
-function save(){localStorage.setItem('orders',JSON.stringify(data));render();buildChart();}
-
-function render(){
- tbody.innerHTML='';let p=0,pk=0,dk=0,sl=0,rt=0;
- data.filter(o=>o.store===storeFilter.value||!storeFilter.value).forEach(o=>{
-  const m=o.jual-o.modal;p+=m;
-  if(o.status==='packing')pk++;if(o.status==='dikirim')dk++;if(o.status==='selesai')sl++;if(o.status==='return')rt++;
-  const tr=document.createElement('tr');tr.className='status-'+o.status;
-  const days=(Date.now()-new Date(o.tgl))/86400000;
-  if((o.status==='packing'&&days>2)||(o.status==='dikirim'&&days>5))tr.classList.add('warning');
-  tr.innerHTML=`<td>${o.tgl}</td><td>${o.no}</td><td>${o.produk}</td><td>${o.kategori}</td><td>${o.modal}</td><td>${o.jual}</td><td>${m}</td><td>${o.status}</td><td>${o.store}</td>`;
-  tbody.appendChild(tr);
- });
- totalOrder.innerText=data.length;packing.innerText=pk;dikirim.innerText=dk;selesai.innerText=sl;retur.innerText=rt;profit.innerText='Rp '+p.toLocaleString('id-ID');
+function applyRole(role){
+  if(role==='staff'){
+    document.querySelectorAll('.admin-only').forEach(e=>e.style.display='none');
+  }
 }
 
-// ===== CHART =====
-let chart;
-function buildChart(){
- const ctx=document.getElementById('chart');
- const monthly={};
- data.forEach(o=>{const k=o.tgl?.slice(0,7);monthly[k]=(monthly[k]||0)+(o.jual-o.modal)});
- if(chart)chart.destroy();
- chart=new Chart(ctx,{type:'bar',data:{labels:Object.keys(monthly),datasets:[{label:'Profit',data:Object.values(monthly)}]}});
+function addRow(data={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+  <td><input type=date value="${data.tanggal||''}"></td>
+  <td><input value="${data.no||''}"></td>
+  <td><input value="${data.produk||''}"></td>
+  <td><input type=number value="${data.modal||0}" oninput=calc(this)></td>
+  <td><input type=number value="${data.jual||0}" oninput=calc(this)></td>
+  <td class=margin>0</td>
+  <td>
+    <select onchange=update()>
+      <option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option>
+    </select>
+  </td>
+  <td class="admin-only"><button onclick="this.parentElement.parentElement.remove();update()">Hapus</button></td>`;
+  document.querySelector('#tableOrder tbody').appendChild(tr);
+  update();
 }
 
-function exportPDF(){html2pdf().from(app).save('Laporan-Bisnis-Shopee.pdf');}
+function calc(el){const tr=el.closest('tr');tr.querySelector('.margin').innerText=(tr.children[4].children[0].value-tr.children[3].children[0].value)||0;update();}
+
+function update(){
+  const rows=document.querySelectorAll('#tableOrder tbody tr');
+  let p=0,pa=0,di=0,se=0,re=0;
+  rows.forEach(r=>{
+    p+=+r.querySelector('.margin').innerText||0;
+    const s=r.querySelector('select').value;
+    if(s==='Packing')pa++; if(s==='Dikirim')di++; if(s==='Selesai')se++; if(s==='Return')re++;
+  });
+  totalOrder.innerText=rows.length; packing.innerText=pa; dikirim.innerText=di; selesai.innerText=se; retur.innerText=re; profit.innerText='Rp '+p.toLocaleString('id-ID');
+  save();
+}
+
+function save(){
+  const data=[];
+  document.querySelectorAll('#tableOrder tbody tr').forEach(r=>{
+    data.push({tanggal:r.children[0].children[0].value,no:r.children[1].children[0].value,produk:r.children[2].children[0].value,modal:r.children[3].children[0].value,jual:r.children[4].children[0].value,status:r.children[6].children[0].value});
+  });
+  localStorage.setItem(ORDER_KEY,JSON.stringify(data));
+}
+
+function loadOrders(){JSON.parse(localStorage.getItem(ORDER_KEY)||'[]').forEach(addRow);}
+
+function exportCSV(){let c='Tanggal,No,Produk,Modal,Jual,Status\n';JSON.parse(localStorage.getItem(ORDER_KEY)||'[]').forEach(d=>c+=`${d.tanggal},${d.no},${d.produk},${d.modal},${d.jual},${d.status}\n`);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='shopee-report.csv';a.click();}
 </script>
 </body>
 </html>
