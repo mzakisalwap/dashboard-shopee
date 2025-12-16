@@ -70,7 +70,7 @@ th{background:#4f46e5;color:#fff}
   <h3>Login Dashboard</h3>
   <input id="loginId" placeholder="ID User">
   <input id="loginPass" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+  <button id="btnLogin">Login</button>
   <p id="loginMsg" style="color:red;text-align:center"></p>
 </div>
 
@@ -130,6 +130,10 @@ th{background:#4f46e5;color:#fff}
 
   </div>
 </div>
+  <script>
+document.getElementById("btnLogin").addEventListener("click", login)
+</script>
+</body>
 
 <!-- SCRIPT PALING BAWAH (PENTING) -->
 <script>
@@ -222,4 +226,5 @@ function renderChart(){
       labels:Object.keys(da
   }
    </script>
+
 
