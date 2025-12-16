@@ -39,6 +39,85 @@ button{background:#6c63ff;color:#fff;border:none}
     <b>Total Profit:</b> <span id="profit">Rp 0</span>
   </div>
 </div>
+  <hr>
+
+<h3>Tambah Order</h3>
+<button onclick="addOrder()">+ Tambah Order</button>
+
+<table border="1" cellpadding="6" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Tanggal</th>
+      <th>No Pesanan</th>
+      <th>Produk</th>
+      <th>Modal</th>
+      <th>Jual</th>
+      <th>Margin</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="orderBody"></tbody>
+</table>
+
+<script>
+var orders = [];
+
+function addOrder(){
+  orders.push({
+    tanggal: "",
+    no: "",
+    produk: "",
+    modal: 0,
+    jual: 0,
+    status: "Packing"
+  });
+  renderOrders();
+}
+
+function renderOrders(){
+  var body = document.getElementById("orderBody");
+  body.innerHTML = "";
+
+  var totalProfit = 0;
+  var packing=0, dikirim=0, selesai=0, retur=0;
+
+  for(var i=0;i<orders.length;i++){
+    var o = orders[i];
+    var margin = o.jual - o.modal;
+    totalProfit += margin;
+
+    if(o.status==="Packing") packing++;
+    if(o.status==="Dikirim") dikirim++;
+    if(o.status==="Selesai") selesai++;
+    if(o.status==="Return") retur++;
+
+    body.innerHTML +=
+      "<tr>" +
+      "<td><input type='date'></td>" +
+      "<td><input></td>" +
+      "<td><input></td>" +
+      "<td><input type='number'></td>" +
+      "<td><input type='number'></td>" +
+      "<td>"+margin+"</td>" +
+      "<td>" +
+        "<select>" +
+          "<option>Packing</option>" +
+          "<option>Dikirim</option>" +
+          "<option>Selesai</option>" +
+          "<option>Return</option>" +
+        "</select>" +
+      "</td>" +
+      "</tr>";
+  }
+
+  document.getElementById("totalOrder").innerText = orders.length;
+  document.getElementById("packing").innerText = packing;
+  document.getElementById("dikirim").innerText = dikirim;
+  document.getElementById("selesai").innerText = selesai;
+  document.getElementById("retur").innerText = retur;
+  document.getElementById("profit").innerText = "Rp "+totalProfit;
+}
+</script>
 
 
 /* USER DATA */
@@ -76,4 +155,5 @@ function logout(){
 
 </body>
 </html>
+
 
