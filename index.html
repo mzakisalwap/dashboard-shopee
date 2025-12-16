@@ -69,24 +69,17 @@ th{background:#eef1ff}
   </div>
 
   <!-- ORDER -->
-  <h3>📦 Data Order</h3>
-  <button onclick="addOrder()">+ Tambah Order</button>
+  <h3>📦 Packing</h3>
+<table><thead>...</thead><tbody id="packingBody"></tbody></table>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Tanggal</th>
-        <th>No Pesanan</th>
-        <th>Produk</th>
-        <th>Modal</th>
-        <th>Jual</th>
-        <th>Margin</th>
-        <th>Status</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody id="orderBody"></tbody>
-  </table>
+<h3>🚚 Dikirim</h3>
+<table><thead>...</thead><tbody id="dikirimBody"></tbody></table>
+
+<h3>✅ Selesai</h3>
+<table><thead>...</thead><tbody id="selesaiBody"></tbody></table>
+
+<h3>🔄 Return</h3>
+<table><thead>...</thead><tbody id="returnBody"></tbody></table>
 
 </div>
 
@@ -136,8 +129,10 @@ function addOrder(){
 }
 
 function renderOrders(){
-  var body=document.getElementById("orderBody");
-  body.innerHTML="";
+  packingBody.innerHTML="";
+  dikirimBody.innerHTML="";
+  selesaiBody.innerHTML="";
+  returnBody.innerHTML="";
 
   for(var i=0;i<orders.length;i++){
     var o=orders[i];
@@ -158,13 +153,16 @@ function renderOrders(){
       "<td><input type='number' value='"+o.jual+"' onchange='updateField("+i+",\"jual\",this.value)'></td>"+
       "<td>"+margin+"</td>"+
       "<td><select onchange='updateField("+i+",\"status\",this.value)'>"+
-      "<option "+(o.status==="Packing"?"selected":"")+">Packing</option>"+
-      "<option "+(o.status==="Dikirim"?"selected":"")+">Dikirim</option>"+
-      "<option "+(o.status==="Selesai"?"selected":"")+">Selesai</option>"+
-      "<option "+(o.status==="Return"?"selected":"")+">Return</option>"+
+        "<option "+(o.status==="Packing"?"selected":"")+">Packing</option>"+
+        "<option "+(o.status==="Dikirim"?"selected":"")+">Dikirim</option>"+
+        "<option "+(o.status==="Selesai"?"selected":"")+">Selesai</option>"+
+        "<option "+(o.status==="Return"?"selected":"")+">Return</option>"+
       "</select></td>"+aksi;
 
-    body.appendChild(tr);
+    if(o.status==="Packing") packingBody.appendChild(tr);
+    if(o.status==="Dikirim") dikirimBody.appendChild(tr);
+    if(o.status==="Selesai") selesaiBody.appendChild(tr);
+    if(o.status==="Return") returnBody.appendChild(tr);
   }
 
   updateDashboard();
@@ -236,3 +234,4 @@ function loadOrders(){
 
 </body>
 </html>
+
