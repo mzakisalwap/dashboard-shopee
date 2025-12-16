@@ -69,7 +69,7 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 <!-- APP -->
 <div id="app" class="hidden">
 <div class="header">
-<b>📦 Shopee Report Dashboard</b>
+<b>📦 Shopee Business Dashboard</b>
 <div>
 <button onclick="toggleDark()">🌙</button>
 <button onclick="logout()">Logout</button>
@@ -90,6 +90,7 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="page">
+<div class="controls"><select id="dashFilter" onchange="render()"><option value="all">Semua</option><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select></div>
 <div class="stats">
 <div class="stat"><small>Total Order</small><h2 id="totalOrder">0</h2></div>
 <div class="stat"><small>Total Margin</small><h2 id="totalMargin">Rp0</h2></div>
@@ -108,11 +109,11 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 <div id="analytics" class="page hidden">
 <div class="box">
 <h3>📊 Grafik Profit Harian</h3>
-<canvas id="chartProfit" height="75"></canvas>
+<canvas id="chartProfit" height="110"></canvas>
 </div>
 <div class="box">
 <h3>📦 Grafik Status Order</h3>
-<canvas id="chartStatus" height="75"></canvas>
+<canvas id="chartStatus" height="110"></canvas>
 </div>
 </div>
 
@@ -153,7 +154,7 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 </div>
 
 <script>
-const KEY='shopee_pro';let data=[],chart1,chart2;
+const KEY='shopee_pro';let data=[],chart1,chart2,chartDash;
 function login(){if(user.value==='admin'&&pass.value==='admin123'){loginBox.classList.add('hidden');app.classList.remove('hidden');load();}}
 function logout(){location.reload()}
 function toggleDark(){document.body.classList.toggle('dark')}
@@ -169,7 +170,11 @@ if(chart1)chart1.destroy();if(chart2)chart2.destroy();
 const byDate={};data.forEach(x=>{byDate[x.t]=(byDate[x.t]||0)+(x.j-x.m)});
 chart1=new Chart(chartProfit,{type:'bar',data:{labels:Object.keys(byDate),datasets:[{label:'Profit',data:Object.values(byDate),backgroundColor:'#ff5722'}]}});
 const st={Packing:0,Dikirim:0,Selesai:0,Return:0};data.forEach(x=>st[x.s]++);
-chart2=new Chart(chartStatus,{type:'doughnut',data:{labels:Object.keys(st),datasets:[{data:Object.values(st),backgroundColor:['#ff9800','#03a9f4','#4caf50','#f44336']}]} });
+chart2=new Chart(chartStatus,{type:'doughnut',data:{labels:Object.keys(st),datasets:[{data:Object.values(st),backgroundColor:['#ff9800','#03a9f4','#4caf50','#f44336']}]}});
+
+// DASHBOARD CHART
+if(chartDash)chartDash.destroy();
+chartDash=new Chart(chartDashboard,{type:'bar',data:{labels:['Packing','Dikirim','Selesai','Return'],datasets:[{label:'Jumlah Order',data:[st.Packing,st.Dikirim,st.Selesai,st.Return],backgroundColor:['#ffb74d','#64b5f6','#81c784','#e57373']}]} });
 }
 function exportCSV(){let c='Tanggal,Pesanan,Produk,Modal,Jual,Status\n';data.forEach(x=>{c+=`${x.t},${x.p},${x.pr},${x.m},${x.j},${x.s}\n`});dl(c,'shopee-report.csv')}
 function importCSV(i){const r=new FileReader();r.onload=e=>{e.target.result.split('\n').slice(1).forEach(l=>{const x=l.split(',');if(x.length>4)addRow({t:x[0],p:x[1],pr:x[2],m:+x[3],j:+x[4],s:x[5]})})};r.readAsText(i.files[0])}
