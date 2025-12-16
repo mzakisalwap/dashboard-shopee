@@ -11,16 +11,13 @@
 body{margin:0;font-family:Arial;background:#f4f6fb}
 
 /* LOGIN */
-#loginPage{
-  height:100vh;display:flex;
-  align-items:center;justify-content:center
-}
+#loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
 .login-box{
-  width:330px;background:#fff;padding:25px;
+  width:340px;background:#fff;padding:25px;
   box-shadow:0 10px 25px rgba(0,0,0,.1)
 }
 .login-box h3{text-align:center}
-.login-box input,button{
+.login-box input,button,select{
   width:100%;padding:10px;margin-top:10px
 }
 button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
@@ -32,6 +29,7 @@ button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
   width:230px;height:100vh;position:fixed;
   background:#1e293b;color:#fff;padding:20px
 }
+.sidebar h3{margin-bottom:20px}
 .sidebar a{
   display:block;color:#fff;padding:10px;
   text-decoration:none;border-radius:5px;cursor:pointer
@@ -61,6 +59,12 @@ th{background:#4f46e5;color:#fff}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
+
+/* FILTER */
+.filter{display:flex;gap:10px;margin-bottom:10px}
+
+/* FINANCE COLUMN */
+.colFinance{}
 </style>
 </head>
 
@@ -104,21 +108,29 @@ th{background:#4f46e5;color:#fff}
         <option value="selesai">Selesai</option>
         <option value="return">Return</option>
       </select>
-      <button onclick="tambahOrder()">Simpan</button>
+      <button onclick="tambahOrder()">Simpan Order</button>
     </div>
 
     <!-- TABLE -->
     <div id="pageTable" class="card hidden">
       <h3>Data Order</h3>
+
+      <div class="filter">
+        <input type="date" id="filterTanggal">
+        <input type="month" id="filterBulan">
+        <button onclick="renderTable()">Filter</button>
+        <button onclick="resetFilter()">Reset</button>
+      </div>
+
       <table>
         <thead>
           <tr>
             <th>No Pesanan</th>
             <th>Tanggal</th>
             <th>Produk</th>
-            <th>Modal</th>
-            <th>Jual</th>
-            <th>Profit</th>
+            <th class="colFinance">Modal</th>
+            <th class="colFinance">Jual</th>
+            <th class="colFinance">Profit</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -136,14 +148,14 @@ th{background:#4f46e5;color:#fff}
 </div>
 
 <script>
-/* USER */
+/* USERS */
 var users=[
 {id:"owner",password:"owner123",role:"Owner"},
 {id:"admin",password:"admin123",role:"Admin"},
 {id:"staff",password:"staff123",role:"Staff"}
 ];
 
-var orders=[];
+var orders=JSON.parse(localStorage.getItem("orders")||"[]");
 var currentRole="";
 var chart=null;
 
@@ -156,9 +168,14 @@ function login(){
       loginPage.style.display="none";
       dashboard.style.display="block";
       roleText.innerHTML="Role: "+currentRole;
+
       if(currentRole==="Staff"){
-        document.getElementById("menuChart").style.display="none";
+        menuChart.style.display="none";
+        var cols=document.getElementsByClassName("colFinance");
+        for(var j=0;j<cols.length;j++) cols[j].style.display="none";
       }
+      showPage("pageTable");
+      renderTable();
       return;
     }
   }
@@ -166,14 +183,17 @@ function login(){
 }
 
 /* LOGOUT */
-function logout(){location.reload()}
+function logout(){
+  location.reload();
+}
 
 /* MENU */
 function showPage(id){
-  document.getElementById("pageInput").classList.add("hidden");
-  document.getElementById("pageTable").classList.add("hidden");
-  document.getElementById("pageChart").classList.add("hidden");
+  pageInput.classList.add("hidden");
+  pageTable.classList.add("hidden");
+  pageChart.classList.add("hidden");
   document.getElementById(id).classList.remove("hidden");
+  if(id==="pageChart") renderChart();
 }
 
 /* TAMBAH ORDER */
@@ -187,27 +207,83 @@ function tambahOrder(){
     profit:Number(jual.value)-Number(modal.value),
     status:status.value
   });
-  alert("Order berhasil disimpan");
+  localStorage.setItem("orders",JSON.stringify(orders));
+  alert("Order tersimpan");
   showPage("pageTable");
   renderTable();
 }
 
-/* RENDER TABLE */
+/* RENDER TABLE + EDIT STATUS */
 function renderTable(){
   tbody.innerHTML="";
   for(var i=0;i<orders.length;i++){
     var o=orders[i];
+
+    if(filterTanggal.value && o.tanggal!==filterTanggal.value) continue;
+    if(filterBulan.value && o.tanggal.substr(0,7)!==filterBulan.value) continue;
+
+    var statusHTML="";
+    if(currentRole!=="Staff"){
+      statusHTML=
+      "<select onchange='updateStatus("+i+",this.value)' class='"+o.status+"'>"+
+      "<option value='packing'>Packing</option>"+
+      "<option value='dikirim'>Dikirim</option>"+
+      "<option value='selesai'>Selesai</option>"+
+      "<option value='return'>Return</option>"+
+      "</select>";
+    }else{
+      statusHTML="<span class='status "+o.status+"'>"+o.status+"</span>";
+    }
+
     tbody.innerHTML+=
       "<tr>"+
       "<td>"+o.no+"</td>"+
       "<td>"+o.tanggal+"</td>"+
       "<td>"+o.produk+"</td>"+
-      "<td>"+o.modal+"</td>"+
-      "<td>"+o.jual+"</td>"+
-      "<td>"+o.profit+"</td>"+
-      "<td><span class='status "+o.status+"'>"+o.status+"</span></td>"+
+      "<td class='colFinance'>"+o.modal+"</td>"+
+      "<td class='colFinance'>"+o.jual+"</td>"+
+      "<td class='colFinance'>"+o.profit+"</td>"+
+      "<td>"+statusHTML+"</td>"+
       "</tr>";
   }
+
+  if(currentRole!=="Staff"){
+    var selects=tbody.querySelectorAll("select");
+    for(var k=0;k<selects.length;k++){
+      selects[k].value=orders[k].status;
+    }
+  }
+}
+
+/* UPDATE STATUS */
+function updateStatus(i,val){
+  orders[i].status=val;
+  localStorage.setItem("orders",JSON.stringify(orders));
+  renderTable();
+}
+
+/* RESET FILTER */
+function resetFilter(){
+  filterTanggal.value="";
+  filterBulan.value="";
+  renderTable();
+}
+
+/* GRAFIK */
+function renderChart(){
+  if(chart) chart.destroy();
+  var labels=[], data=[];
+  for(var i=0;i<orders.length;i++){
+    labels.push(orders[i].produk);
+    data.push(orders[i].profit);
+  }
+  chart=new Chart(profitChart,{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{label:"Profit",data:data}]
+    }
+  });
 }
 </script>
 
