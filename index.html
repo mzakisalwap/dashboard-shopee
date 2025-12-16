@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <title>Dashboard Order Shopee</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+</head>
+  
 <style>
 body{margin:0;font-family:Arial;background:#f4f6fb}
 .login-box{
@@ -45,9 +46,7 @@ th{background:#4f46e5;color:#fff}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
-
 </style>
-</head>
 
 <body>
 
@@ -138,12 +137,11 @@ function login(){
     msg.innerText="ID atau Password salah!"
     return
   }
-
+  
   roleUser=user.role
   document.getElementById("loginBox").style.display="none"
   document.getElementById("dashboard").style.display="block"
 
-  // Hak akses
   if(roleUser==="staff"){
     document.querySelector('[onclick="show(\'chart\')"]').style.display="none"
   }
@@ -163,5 +161,6 @@ function tambahOrder(){
   let jual=+jualEl.value
   orders.push({
     tangga
-
+</script>
+</body>
 
