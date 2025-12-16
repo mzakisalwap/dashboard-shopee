@@ -105,15 +105,14 @@ var orders = [];
 
 /* ================= LOGIN ================= */
 function login(){
-  var u=document.getElementById("username").value;
-  var p=document.getElementById("password").value;
-  var found=null;
-  currentUser = found;
+  var u = document.getElementById("username").value;
+  var p = document.getElementById("password").value;
+  var found = null;
 
-
-  for(var i=0;i<USERS.length;i++){
-    if(USERS[i].username===u && USERS[i].password===p){
-      found=USERS[i];
+  for(var i = 0; i < USERS.length; i++){
+    if(USERS[i].username === u && USERS[i].password === p){
+      found = USERS[i];
+      break;
     }
   }
 
@@ -122,13 +121,21 @@ function login(){
     return;
   }
 
-  document.getElementById("loginBox").style.display="none";
+  // ✅ SET USER SETELAH DITEMUKAN
+  currentUser = found;
+
+  // ✅ ID HARUS loginBox
+  document.getElementById("loginBox").style.display = "none";
   document.getElementById("app").classList.remove("hidden");
-  document.getElementById("roleInfo").innerText="Role: "+found.role;
-  document.getElementById("today").innerText=new Date().toLocaleDateString("id-ID");
+
+  document.getElementById("roleInfo").innerText = "Role: " + found.role;
+  document.getElementById("today").innerText =
+    new Date().toLocaleDateString("id-ID");
 
   loadOrders();
   updateDashboard();
+}
+
 }
 
 function logout(){
@@ -279,6 +286,7 @@ function renderChart(){
 
 </body>
 </html>
+
 
 
 
