@@ -76,8 +76,9 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:30px}
     <canvas id="profitChart" height="90"></canvas>
   </div>
 
-  <!-- TABLE -->
+  <!-- TABLE ORDER -->
   <div class="table-wrap">
+    <h3>📦 Tabel Order</h3>
     <button class="btn-primary" onclick="addRow()">+ Tambah Order</button>
     <button class="btn-success admin-only" onclick="exportCSV()">Export CSV</button>
     <table id="tableOrder">
@@ -85,6 +86,24 @@ footer{text-align:center;color:#888;font-size:12px;margin-top:30px}
         <tr>
           <th>Tanggal</th><th>No Pesanan</th><th>Produk</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th class="admin-only">Aksi</th>
         </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- TABLE USER MANAGEMENT -->
+  <div class="table-wrap admin-only">
+    <h3>👥 Manajemen User</h3>
+    <input id="newUser" placeholder="Username">
+    <input id="newPass" placeholder="Password">
+    <select id="newRole">
+      <option value="staff">Staff</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button class="btn-primary" onclick="addUser()">Tambah User</button>
+    <table id="userTable">
+      <thead>
+        <tr><th>Username</th><th>Role</th><th>Aksi</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -118,7 +137,7 @@ function login(){
   roleInfo.innerText='Role: '+found.role.toUpperCase();
   today.innerText=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
   if(found.role==='staff')document.querySelectorAll('.admin-only').forEach(e=>e.style.display='none');
-  loadOrders();
+  loadOrders(); loadUsers();
 }
 
 function logout(){localStorage.removeItem('currentUser');location.reload();}
@@ -200,9 +219,48 @@ function drawChart(){
 
 /* ===== EXPORT ===== */
 function exportCSV(){
-  let csv='Tanggal,No,Produk,Modal,Jual,Status\n';
+  let csv='Tanggal,No,Produk,Modal,Jual,Status
+';
   JSON.parse(localStorage.getItem(ORDER_KEY)||'[]').forEach(d=>{
-    csv+=`${d.tanggal},${d.no},${d.produk},${d.modal},${d.jual},${d.status}\n`;
+    csv+=`${d.tanggal},${d.no},${d.produk},${d.modal},${d.jual},${d.status}
+`;
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='report-shopee.csv';
+  a.click();
+}
+
+/* ===== USER MANAGEMENT ===== */
+function loadUsers(){
+  const users=JSON.parse(localStorage.getItem(USERS_KEY));
+  const tb=document.querySelector('#userTable tbody');
+  tb.innerHTML='';
+  users.forEach((u,i)=>{
+    if(u.role==='owner')return;
+    tb.innerHTML+=`<tr><td>${u.username}</td><td>${u.role}</td><td><button class="btn-danger" onclick="deleteUser(${i})">Hapus</button></td></tr>`;
+  });
+}
+
+function addUser(){
+  const u=newUser.value.trim();
+  const p=newPass.value.trim();
+  const r=newRole.value;
+  if(!u||!p)return alert('Lengkapi data');
+  const users=JSON.parse(localStorage.getItem(USERS_KEY));
+  if(users.find(x=>x.username===u))return alert('User sudah ada');
+  users.push({username:u,password:p,role:r});
+  localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  newUser.value=newPass.value='';
+  loadUsers();
+}
+
+function deleteUser(i){
+  const users=JSON.parse(localStorage.getItem(USERS_KEY));
+  users.splice(i,1);
+  localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  loadUsers();
+},${d.no},${d.produk},${d.modal},${d.jual},${d.status}\n`;
   });
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
