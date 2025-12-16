@@ -6,53 +6,97 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--bg:#f4f6f8;--card:#ffffff;--primary:#ff5722;--text:#222}
-.dark{--bg:#121212;--card:#1e1e1e;--text:#f5f5f5}
-*{box-sizing:border-box}
-body{margin:0;font-family:'Segoe UI',Arial;background:var(--bg);color:var(--text)}
-.hidden{display:none}
-
-/* LOGIN */
-.login{max-width:360px;margin:90px auto;background:var(--card);padding:25px;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.15);text-align:center}
-
-/* HEADER */
-.header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.08);position:sticky;top:0;z-index:10}
-
-/* SIDEBAR */
-.layout{display:flex}
-.sidebar{width:230px;background:var(--card);min-height:100vh;box-shadow:2px 0 10px rgba(0,0,0,.08)}
-.sidebar h3{text-align:center;padding:15px;margin:0;border-bottom:1px solid #eee}
-.sidebar button{width:100%;padding:14px;border:none;background:none;text-align:left;cursor:pointer;font-size:15px}
-.sidebar button.active,.sidebar button:hover{background:var(--primary);color:#fff}
-
-/* CONTENT */
-.content{flex:1;padding:22px}
-
-/* STATS */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
-.stat{background:var(--card);padding:18px;border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
-.stat h2{margin:5px 0}
-
-/* BOX */
-.box{background:var(--card);padding:20px;border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.08);margin-bottom:20px}
-
-/* TABLE */
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px;text-align:center;border-bottom:1px solid #eee}
-th{background:var(--primary);color:#fff;position:sticky;top:0}
-tr.status-Selesai{background:#e8f5e9}
-tr.status-Return{background:#fdecea}
-
-/* CONTROLS */
-.controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
-input,select,button{padding:10px;border-radius:10px;border:1px solid #ccc}
-button{background:var(--primary);color:#fff;border:none;cursor:pointer}
-
-@media(max-width:768px){
-.layout{flex-direction:column}
-.sidebar{width:100%;display:flex;overflow:auto}
-.sidebar button{text-align:center;flex:1}
+:root{
+  --primary:#6366f1; /* indigo */
+  --secondary:#ecfeff; /* soft cyan */
+  --bg:#f8fafc; /* light background */
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
 }
+
+body{
+  background:var(--bg);
+  font-family:'Inter', Arial, sans-serif;
+  color:var(--text);
+  margin:0;
+}
+
+header{
+  background:linear-gradient(135deg,#6366f1,#22d3ee);
+  color:white;
+  padding:20px;
+  border-radius:0 0 24px 24px;
+}
+
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin:20px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.card h3{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.card p{
+  font-size:26px;
+  margin:6px 0 0;
+  font-weight:600;
+}
+
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0 10px;
+}
+
+thead th{
+  text-align:left;
+  padding:12px;
+  color:var(--muted);
+}
+
+tbody tr{
+  background:var(--card);
+  box-shadow:0 6px 20px rgba(0,0,0,.06);
+  border-radius:14px;
+}
+
+tbody td{
+  padding:14px;
+}
+
+tbody tr:hover{
+  transform:scale(1.01);
+  transition:.2s;
+}
+
+.status-packing{background:#fef3c7;}
+.status-dikirim{background:#e0f2fe;}
+.status-selesai{background:#dcfce7;}
+.status-return{background:#fee2e2;}
+
+button{
+  background:linear-gradient(135deg,#6366f1,#22d3ee);
+  color:white;
+  border:none;
+  padding:10px 16px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+button:hover{opacity:.9;}
 </style>
 </head>
 <body>
@@ -98,7 +142,10 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 <div class="stat"><small>Dikirim</small><h2 id="dikirim">0</h2></div>
 <div class="stat"><small>Selesai</small><h2 id="selesai">0</h2></div>
 <div class="stat"><small>Return</small><h2 id="retur">0</h2></div>
-
+</div>
+<div class="stat"><small>Total Margin</small><h2 id="totalMargin">Rp0</h2></div>
+<div class="stat"><small>Selesai</small><h2 id="selesai">0</h2></div>
+<div class="stat"><small>Return</small><h2 id="retur">0</h2></div>
 </div>
 </div>
 
@@ -106,11 +153,11 @@ button{background:var(--primary);color:#fff;border:none;cursor:pointer}
 <div id="analytics" class="page hidden">
 <div class="box">
 <h3>📊 Grafik Profit Harian</h3>
-<canvas id="chartProfit" height="100"></canvas>
+<canvas id="chartProfit" height="85"></canvas>
 </div>
 <div class="box">
 <h3>📦 Grafik Status Order</h3>
-<canvas id="chartStatus" height="75"></canvas>
+<canvas id="chartStatus" height="85"></canvas>
 </div>
 </div>
 
@@ -179,6 +226,3 @@ function dl(c,n){const a=document.createElement('a');a.href=URL.createObjectURL(
 </script>
 </body>
 </html>
-
-
-
