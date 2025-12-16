@@ -87,7 +87,11 @@ function login(){
   loadOrders();
 }
 
-function logout(){localStorage.clear();location.reload();}
+function logout(){
+  localStorage.removeItem("currentUser");
+  location.reload();
+}
+
 
 function applyRole(role){
   if(role==='staff'){
@@ -142,3 +146,4 @@ function exportCSV(){let c='Tanggal,No,Produk,Modal,Jual,Status\n';JSON.parse(lo
 </script>
 </body>
 </html>
+
