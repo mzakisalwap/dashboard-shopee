@@ -11,7 +11,10 @@
 body{margin:0;font-family:Arial;background:#f4f6fb}
 
 /* LOGIN */
-#loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
+#loginPage{
+  height:100vh;display:flex;
+  align-items:center;justify-content:center
+}
 .login-box{
   width:330px;background:#fff;padding:25px;
   box-shadow:0 10px 25px rgba(0,0,0,.1)
@@ -29,7 +32,6 @@ button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
   width:230px;height:100vh;position:fixed;
   background:#1e293b;color:#fff;padding:20px
 }
-.sidebar h3{margin-bottom:20px}
 .sidebar a{
   display:block;color:#fff;padding:10px;
   text-decoration:none;border-radius:5px;cursor:pointer
@@ -38,7 +40,8 @@ button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
 
 .main{margin-left:230px;padding:25px}
 .card{
-  background:#fff;padding:20px;border-radius:6px;margin-bottom:20px
+  background:#fff;padding:20px;
+  border-radius:6px;margin-bottom:20px
 }
 .hidden{display:none}
 
@@ -58,10 +61,6 @@ th{background:#4f46e5;color:#fff}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
-
-/* FILTER */
-.filter{display:flex;gap:10px;margin-bottom:10px}
-select.editStatus{padding:5px}
 </style>
 </head>
 
@@ -83,16 +82,16 @@ select.editStatus{padding:5px}
 
   <div class="sidebar">
     <h3 id="roleText"></h3>
-    <a onclick="showPage('input')">Input Order</a>
-    <a onclick="showPage('table')">Data Order</a>
-    <a onclick="showPage('chart')" id="menuChart">Grafik</a>
+    <a onclick="showPage('pageInput')">Input Order</a>
+    <a onclick="showPage('pageTable')">Data Order</a>
+    <a onclick="showPage('pageChart')" id="menuChart">Grafik</a>
     <a onclick="logout()">Logout</a>
   </div>
 
   <div class="main">
 
-    <!-- INPUT ORDER -->
-    <div id="input" class="card">
+    <!-- INPUT -->
+    <div id="pageInput" class="card">
       <h3>Input Order</h3>
       <input id="noPesanan" placeholder="No Pesanan">
       <input type="date" id="tanggal">
@@ -105,29 +104,21 @@ select.editStatus{padding:5px}
         <option value="selesai">Selesai</option>
         <option value="return">Return</option>
       </select>
-      <button onclick="tambahOrder()">Simpan Order</button>
+      <button onclick="tambahOrder()">Simpan</button>
     </div>
 
-    <!-- DATA ORDER -->
-    <div id="table" class="card hidden">
+    <!-- TABLE -->
+    <div id="pageTable" class="card hidden">
       <h3>Data Order</h3>
-
-      <div class="filter">
-        <input type="date" id="filterTanggal">
-        <input type="month" id="filterBulan">
-        <button onclick="renderTable()">Filter</button>
-        <button onclick="resetFilter()">Reset</button>
-      </div>
-
       <table>
         <thead>
           <tr>
             <th>No Pesanan</th>
             <th>Tanggal</th>
             <th>Produk</th>
-            <th class="colFinance">Modal</th>
-            <th class="colFinance">Jual</th>
-            <th class="colFinance">Profit</th>
+            <th>Modal</th>
+            <th>Jual</th>
+            <th>Profit</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -135,8 +126,8 @@ select.editStatus{padding:5px}
       </table>
     </div>
 
-    <!-- GRAFIK -->
-    <div id="chart" class="card hidden">
+    <!-- CHART -->
+    <div id="pageChart" class="card hidden">
       <h3>Grafik Profit</h3>
       <canvas id="profitChart"></canvas>
     </div>
@@ -153,8 +144,8 @@ var users=[
 ];
 
 var orders=[];
-var chart=null;
 var currentRole="";
+var chart=null;
 
 /* LOGIN */
 function login(){
@@ -165,11 +156,8 @@ function login(){
       loginPage.style.display="none";
       dashboard.style.display="block";
       roleText.innerHTML="Role: "+currentRole;
-
       if(currentRole==="Staff"){
         document.getElementById("menuChart").style.display="none";
-        var cols=document.getElementsByClassName("colFinance");
-        for(var j=0;j<cols.length;j++) cols[j].style.display="none";
       }
       return;
     }
@@ -182,12 +170,10 @@ function logout(){location.reload()}
 
 /* MENU */
 function showPage(id){
-  input.classList.add("hidden");
-  table.classList.add("hidden");
-  chart.classList.add("hidden");
+  document.getElementById("pageInput").classList.add("hidden");
+  document.getElementById("pageTable").classList.add("hidden");
+  document.getElementById("pageChart").classList.add("hidden");
   document.getElementById(id).classList.remove("hidden");
-  if(id==="table") renderTable();
-  if(id==="chart") renderChart();
 }
 
 /* TAMBAH ORDER */
@@ -202,79 +188,26 @@ function tambahOrder(){
     status:status.value
   });
   alert("Order berhasil disimpan");
+  showPage("pageTable");
+  renderTable();
 }
 
-/* RENDER TABLE + EDIT STATUS */
+/* RENDER TABLE */
 function renderTable(){
   tbody.innerHTML="";
   for(var i=0;i<orders.length;i++){
     var o=orders[i];
-
-    if(filterTanggal.value && o.tanggal!==filterTanggal.value) continue;
-    if(filterBulan.value && o.tanggal.substr(0,7)!==filterBulan.value) continue;
-
-    var statusHTML="";
-    if(currentRole==="Owner" || currentRole==="Admin"){
-      statusHTML=
-      "<select class='editStatus "+o.status+"' onchange='updateStatus("+i+",this.value)'>"+
-      "<option value='packing'>Packing</option>"+
-      "<option value='dikirim'>Dikirim</option>"+
-      "<option value='selesai'>Selesai</option>"+
-      "<option value='return'>Return</option>"+
-      "</select>";
-    }else{
-      statusHTML="<span class='status "+o.status+"'>"+o.status+"</span>";
-    }
-
     tbody.innerHTML+=
       "<tr>"+
       "<td>"+o.no+"</td>"+
       "<td>"+o.tanggal+"</td>"+
       "<td>"+o.produk+"</td>"+
-      "<td class='colFinance'>"+o.modal+"</td>"+
-      "<td class='colFinance'>"+o.jual+"</td>"+
-      "<td class='colFinance'>"+o.profit+"</td>"+
-      "<td>"+statusHTML+"</td>"+
+      "<td>"+o.modal+"</td>"+
+      "<td>"+o.jual+"</td>"+
+      "<td>"+o.profit+"</td>"+
+      "<td><span class='status "+o.status+"'>"+o.status+"</span></td>"+
       "</tr>";
   }
-
-  if(currentRole==="Owner" || currentRole==="Admin"){
-    var selects=document.getElementsByClassName("editStatus");
-    for(var k=0;k<selects.length;k++){
-      selects[k].value=orders[k].status;
-    }
-  }
-}
-
-/* UPDATE STATUS */
-function updateStatus(index,value){
-  orders[index].status=value;
-  renderTable();
-}
-
-/* RESET FILTER */
-function resetFilter(){
-  filterTanggal.value="";
-  filterBulan.value="";
-  renderTable();
-}
-
-/* GRAFIK */
-function renderChart(){
-  if(chart) chart.destroy();
-  var labels=[];
-  var data=[];
-  for(var i=0;i<orders.length;i++){
-    labels.push(orders[i].produk);
-    data.push(orders[i].profit);
-  }
-  chart=new Chart(profitChart,{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{label:"Profit",data:data}]
-    }
-  });
 }
 </script>
 
