@@ -86,27 +86,26 @@ var users=[
 {id:"owner01",password:"owner123",role:"owner"},
 {id:"admin01",password:"admin123",role:"admin"},
 {id:"staff01",password:"staff123",role:"staff"}
-]
+];
 
-var orders=[]
-var roleUser=""
-var chart=null
+var roleUser="";
 
 document.getElementById("btnLogin").onclick=function(){
-var id=document.getElementById("loginId").value
-var pass=document.getElementById("loginPass").value
-var msg=document.getElementById("loginMsg").innerHTML=""
+  var id=document.getElementById("loginId").value.trim();
+  var pass=document.getElementById("loginPass").value.trim();
+  var msg=document.getElementById("loginMsg");
+  msg.innerHTML="";
 
-for(var i=0;i<users.length;i++){
-if(users[i].id===id && users[i].password===pass){
-roleUser=users[i].role
-document.getElementById("loginBox").style.display="none"
-document.getElementById("dashboard").style.display="block"
-return
-}
-}
-document.getElementById("loginMsg").innerHTML="ID atau Password salah"
-}
+  for(var i=0;i<users.length;i++){
+    if(users[i].id===id && users[i].password===pass){
+      roleUser=users[i].role;
+      document.getElementById("loginBox").style.display="none";
+      document.getElementById("dashboard").style.display="block";
+      return;
+    }
+  }
+  msg.innerHTML="ID atau Password salah";
+};
 
 function logout(){location.reload()}
 
@@ -138,3 +137,4 @@ document.getElementById("tbody").innerHTML=html
 
 </body>
 </html>
+
