@@ -61,6 +61,8 @@ function login(){
   for(var i=0;i<USERS.length;i++){
     if(USERS[i].username===u && USERS[i].password===p){
       found=USERS[i];
+      loadOrders();
+
     }
   }
 
@@ -81,6 +83,8 @@ function addOrder(){
 function renderOrders(){
   var body=document.getElementById("orderBody");
   body.innerHTML="";
+  saveOrders();
+
 
   for(var i=0;i<orders.length;i++){
     var m=orders[i].jual-orders[i].modal;
@@ -95,8 +99,29 @@ function renderOrders(){
       "<td><select><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td>"+
       "</tr>";
   }
+  <script>
+/* === SIMPAN & LOAD DATA === */
+function addOrder(){
+  orders.push({modal:0,jual:0,status:"Packing"});
+  saveOrders();
+  renderOrders();
+  
+}
+
+}
+
+function loadOrders(){
+  var data = localStorage.getItem("orders");
+  if(data){
+    orders = JSON.parse(data);
+    renderOrders();
+  }
+}
+</script>
+
 }
 </script>
 
 </body>
 </html>
+
