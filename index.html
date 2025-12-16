@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Shopee</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
 
-  
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#f4f6fb}
 .hidden{display:none}
@@ -29,8 +28,10 @@ th{background:#eef1ff}
 .btn-danger{background:#e74c3c}
 .btn-small{padding:6px;font-size:12px}
 </style>
+</head>
 
 <body>
+
 <!-- LOGIN -->
 <div id="loginBox">
   <h3>Login Dashboard</h3>
@@ -61,18 +62,17 @@ th{background:#eef1ff}
     <div class="card">Total Profit<br><b id="profit">Rp 0</b></div>
   </div>
 
-  <!-- GRAFIK PROFIT -->
+  <!-- GRAFIK -->
   <div class="card">
-  <h3>📊 Grafik Profit</h3>
-  <canvas id="profitChart" height="85"></canvas>
-</div>
-
+    <h3>📊 Grafik Profit</h3>
+    <canvas id="profitChart" height="100"></canvas>
+  </div>
 
   <!-- ORDER -->
   <h3>📦 Data Order</h3>
   <button onclick="addOrder()">+ Tambah Order</button>
 
-  <table id="orderTable">
+  <table>
     <thead>
       <tr>
         <th>Tanggal</th>
@@ -87,14 +87,11 @@ th{background:#eef1ff}
     </thead>
     <tbody id="orderBody"></tbody>
   </table>
-<body>
-  
+
 </div>
-  
+
 <script>
-var currentUser = null;
-  
-/* ================= USER ================= */
+/* ===== USER ===== */
 var USERS = [
   {username:"owner", password:"owner123", role:"owner"},
   {username:"admin", password:"admin123", role:"admin"},
@@ -102,52 +99,38 @@ var USERS = [
 ];
 
 var orders = [];
+var currentUser = null;
+var chart = null;
 
-/* ================= LOGIN ================= */
+/* ===== LOGIN ===== */
 function login(){
-  var u = document.getElementById("username").value;
-  var p = document.getElementById("password").value;
-  var found = null;
+  var u=document.getElementById("username").value;
+  var p=document.getElementById("password").value;
+  var found=null;
 
-  for(var i = 0; i < USERS.length; i++){
-    if(USERS[i].username === u && USERS[i].password === p){
-      found = USERS[i];
-      break;
+  for(var i=0;i<USERS.length;i++){
+    if(USERS[i].username===u && USERS[i].password===p){
+      found=USERS[i]; break;
     }
   }
 
-  if(!found){
-    alert("Login gagal");
-    return;
-  }
-  
-  currentUser = found;
-  
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("app").classList.remove("hidden");
+  if(!found){ alert("Login gagal"); return; }
 
-  document.getElementById("roleInfo").innerText = "Role: " + found.role;
-  document.getElementById("today").innerText =
-    new Date().toLocaleDateString("id-ID");
+  currentUser = found;
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("roleInfo").innerText="Role: "+found.role;
+  document.getElementById("today").innerText=new Date().toLocaleDateString("id-ID");
 
   loadOrders();
   updateDashboard();
 }
 
-function logout(){
-  location.reload();
-}
+function logout(){ location.reload(); }
 
-/* ================= ORDER ================= */
+/* ===== ORDER ===== */
 function addOrder(){
-  orders.push({
-    tanggal:"",
-    no:"",
-    produk:"",
-    modal:0,
-    jual:0,
-    status:"Packing"
-  });
+  orders.push({tanggal:"",no:"",produk:"",modal:0,jual:0,status:"Packing"});
   saveOrders();
   renderOrders();
 }
@@ -159,9 +142,13 @@ function renderOrders(){
   for(var i=0;i<orders.length;i++){
     var o=orders[i];
     var margin=o.jual-o.modal;
-
     var tr=document.createElement("tr");
     tr.className="status-"+o.status;
+
+    var aksi = "<td></td>";
+    if(currentUser.role!=="staff"){
+      aksi="<td><button class='btn-danger btn-small' onclick='deleteOrder("+i+")'>Hapus</button></td>";
+    }
 
     tr.innerHTML=
       "<td><input type='date' value='"+o.tanggal+"' onchange='updateField("+i+",\"tanggal\",this.value)'></td>"+
@@ -171,16 +158,11 @@ function renderOrders(){
       "<td><input type='number' value='"+o.jual+"' onchange='updateField("+i+",\"jual\",this.value)'></td>"+
       "<td>"+margin+"</td>"+
       "<td><select onchange='updateField("+i+",\"status\",this.value)'>"+
-        "<option "+(o.status==="Packing"?"selected":"")+">Packing</option>"+
-        "<option "+(o.status==="Dikirim"?"selected":"")+">Dikirim</option>"+
-        "<option "+(o.status==="Selesai"?"selected":"")+">Selesai</option>"+
-        "<option "+(o.status==="Return"?"selected":"")+">Return</option>"+
-      "</select></td>"+ aksi;
-
-      var aksi = "<td>-</td>";
-if(currentUser.role !== "staff"){
-  aksi = "<td><button class='btn-danger btn-small' onclick='deleteOrder("+i+")'>Hapus</button></td>";
-}
+      "<option "+(o.status==="Packing"?"selected":"")+">Packing</option>"+
+      "<option "+(o.status==="Dikirim"?"selected":"")+">Dikirim</option>"+
+      "<option "+(o.status==="Selesai"?"selected":"")+">Selesai</option>"+
+      "<option "+(o.status==="Return"?"selected":"")+">Return</option>"+
+      "</select></td>"+aksi;
 
     body.appendChild(tr);
   }
@@ -189,9 +171,9 @@ if(currentUser.role !== "staff"){
   renderChart();
 }
 
-function updateField(i,field,value){
-  if(field==="modal"||field==="jual"){value=Number(value)||0;}
-  orders[i][field]=value;
+function updateField(i,f,v){
+  if(f==="modal"||f==="jual") v=Number(v)||0;
+  orders[i][f]=v;
   saveOrders();
   renderOrders();
 }
@@ -202,10 +184,9 @@ function deleteOrder(i){
   renderOrders();
 }
 
-/* ================= DASHBOARD ================= */
+/* ===== DASHBOARD ===== */
 function updateDashboard(){
   var p=0,pa=0,di=0,se=0,re=0;
-
   for(var i=0;i<orders.length;i++){
     p+=orders[i].jual-orders[i].modal;
     if(orders[i].status==="Packing")pa++;
@@ -213,80 +194,45 @@ function updateDashboard(){
     if(orders[i].status==="Selesai")se++;
     if(orders[i].status==="Return")re++;
   }
-
-  document.getElementById("totalOrder").innerText=orders.length;
-  document.getElementById("packing").innerText=pa;
-  document.getElementById("dikirim").innerText=di;
-  document.getElementById("selesai").innerText=se;
-  document.getElementById("retur").innerText=re;
-  document.getElementById("profit").innerText="Rp "+p.toLocaleString("id-ID");
+  totalOrder.innerText=orders.length;
+  packing.innerText=pa;
+  dikirim.innerText=di;
+  selesai.innerText=se;
+  retur.innerText=re;
+  profit.innerText="Rp "+p.toLocaleString("id-ID");
 }
 
-/* ================= STORAGE ================= */
-function saveOrders(){
-  localStorage.setItem("orders",JSON.stringify(orders));
-}
-
-function loadOrders(){
-  var data=localStorage.getItem("orders");
-  if(data){orders=JSON.parse(data);}
-  renderOrders();
-}
-  var chart;
-var chart = null;
-
+/* ===== CHART ===== */
 function renderChart(){
-  var labels = [];
-  var dataProfit = [];
-
+  var labels=[],data=[];
   for(var i=0;i<orders.length;i++){
-    if(!orders[i].tanggal) continue;
-
-    var bulan = orders[i].tanggal.substring(0,7); // YYYY-MM
-    var idx = labels.indexOf(bulan);
-    var margin = orders[i].jual - orders[i].modal;
-
-    if(idx === -1){
-      labels.push(bulan);
-      dataProfit.push(margin);
-    } else {
-      dataProfit[idx] += margin;
-    }
+    if(!orders[i].tanggal)continue;
+    var b=orders[i].tanggal.substring(0,7);
+    var m=orders[i].jual-orders[i].modal;
+    var idx=labels.indexOf(b);
+    if(idx==-1){labels.push(b);data.push(m);}
+    else data[idx]+=m;
   }
 
-  var ctx = document.getElementById("profitChart");
-  if(!ctx) return;
+  var ctx=document.getElementById("profitChart");
+  if(!ctx)return;
+  if(chart)chart.destroy();
 
-  if(chart){
-    chart.destroy();
-  }
-
-  chart = new Chart(ctx,{
+  chart=new Chart(ctx,{
     type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{
-        label:"Profit",
-        data:dataProfit,
-        backgroundColor:"#6c63ff"
-      }]
-    },
-    options:{
-      responsive:true,
-      plugins:{ legend:{display:false} }
-    }
+    data:{labels:labels,datasets:[{data:data,backgroundColor:"#6c63ff"}]},
+    options:{plugins:{legend:{display:false}}}
   });
 }
 
+/* ===== STORAGE ===== */
+function saveOrders(){localStorage.setItem("orders",JSON.stringify(orders));}
+function loadOrders(){
+  var d=localStorage.getItem("orders");
+  if(d)orders=JSON.parse(d);
+  renderOrders();
+}
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
