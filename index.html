@@ -8,99 +8,51 @@
 
 <style>
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#f4f6fb;
-}
+body{margin:0;font-family:Arial;background:#f4f6fb}
 
-/* ===== LOGIN ===== */
-#loginPage{
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
+/* LOGIN */
+#loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
 .login-box{
-  width:320px;
-  background:#fff;
-  padding:25px;
-  box-shadow:0 10px 25px rgba(0,0,0,.1);
+  width:330px;background:#fff;padding:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,.1)
 }
 .login-box h3{text-align:center}
 .login-box input,button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
+  width:100%;padding:10px;margin-top:10px
 }
-button{
-  background:#4f46e5;
-  border:none;
-  color:#fff;
-  cursor:pointer;
-}
+button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
 #error{text-align:center;color:red;margin-top:10px}
 
-/* ===== DASHBOARD ===== */
-#dashboard{
-  display:none;
-}
+/* DASHBOARD */
+#dashboard{display:none}
 .sidebar{
-  position:fixed;
-  top:0;left:0;
-  width:220px;
-  height:100vh;
-  background:#1e293b;
-  color:#fff;
-  padding:20px;
+  width:230px;height:100vh;position:fixed;
+  background:#1e293b;color:#fff;padding:20px
 }
-.sidebar h3{
-  margin:0 0 20px 0;
-}
+.sidebar h3{margin-bottom:20px}
 .sidebar a{
-  display:block;
-  padding:10px;
-  color:#fff;
-  text-decoration:none;
-  border-radius:5px;
+  display:block;color:#fff;padding:10px;
+  text-decoration:none;border-radius:5px;cursor:pointer
 }
-.sidebar a:hover{
-  background:#334155;
-}
+.sidebar a:hover{background:#334155}
 
-.main{
-  margin-left:220px;
-  padding:25px;
-}
-
+.main{margin-left:230px;padding:25px}
 .card{
-  background:#fff;
-  padding:20px;
-  border-radius:6px;
-  margin-bottom:20px;
+  background:#fff;padding:20px;border-radius:6px;margin-bottom:20px
 }
+.hidden{display:none}
 
 /* TABLE */
-table{
-  width:100%;
-  border-collapse:collapse;
-}
+table{width:100%;border-collapse:collapse}
 th,td{
-  padding:10px;
-  border:1px solid #ddd;
-  text-align:center;
+  border:1px solid #ddd;padding:10px;text-align:center
 }
-th{
-  background:#4f46e5;
-  color:#fff;
-}
+th{background:#4f46e5;color:#fff}
 
 /* STATUS */
 .status{
-  padding:4px 10px;
-  border-radius:12px;
-  color:#fff;
-  font-size:12px;
+  padding:4px 10px;border-radius:12px;
+  color:#fff;font-size:12px;font-weight:bold
 }
 .packing{background:#facc15;color:#000}
 .dikirim{background:#3b82f6}
@@ -108,12 +60,8 @@ th{
 .return{background:#ef4444}
 
 /* FILTER */
-.filter{
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
-.hidden{display:none}
+.filter{display:flex;gap:10px;margin-bottom:10px}
+select.editStatus{padding:5px}
 </style>
 </head>
 
@@ -137,17 +85,18 @@ th{
     <h3 id="roleText"></h3>
     <a onclick="showPage('input')">Input Order</a>
     <a onclick="showPage('table')">Data Order</a>
-    <a onclick="showPage('chart')">Grafik</a>
+    <a onclick="showPage('chart')" id="menuChart">Grafik</a>
     <a onclick="logout()">Logout</a>
   </div>
 
   <div class="main">
 
-    <!-- INPUT -->
+    <!-- INPUT ORDER -->
     <div id="input" class="card">
       <h3>Input Order</h3>
+      <input id="noPesanan" placeholder="No Pesanan">
       <input type="date" id="tanggal">
-      <input type="text" id="produk" placeholder="Nama Produk">
+      <input id="produk" placeholder="Nama Produk">
       <input type="number" id="modal" placeholder="Harga Modal">
       <input type="number" id="jual" placeholder="Harga Jual">
       <select id="status">
@@ -156,23 +105,29 @@ th{
         <option value="selesai">Selesai</option>
         <option value="return">Return</option>
       </select>
-      <button onclick="tambahOrder()">Simpan</button>
+      <button onclick="tambahOrder()">Simpan Order</button>
     </div>
 
-    <!-- TABLE -->
+    <!-- DATA ORDER -->
     <div id="table" class="card hidden">
       <h3>Data Order</h3>
+
       <div class="filter">
         <input type="date" id="filterTanggal">
         <input type="month" id="filterBulan">
         <button onclick="renderTable()">Filter</button>
+        <button onclick="resetFilter()">Reset</button>
       </div>
+
       <table>
         <thead>
           <tr>
+            <th>No Pesanan</th>
             <th>Tanggal</th>
             <th>Produk</th>
-            <th>Profit</th>
+            <th class="colFinance">Modal</th>
+            <th class="colFinance">Jual</th>
+            <th class="colFinance">Profit</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -180,7 +135,7 @@ th{
       </table>
     </div>
 
-    <!-- CHART -->
+    <!-- GRAFIK -->
     <div id="chart" class="card hidden">
       <h3>Grafik Profit</h3>
       <canvas id="profitChart"></canvas>
@@ -190,6 +145,7 @@ th{
 </div>
 
 <script>
+/* USER */
 var users=[
 {id:"owner",password:"owner123",role:"Owner"},
 {id:"admin",password:"admin123",role:"Admin"},
@@ -198,53 +154,127 @@ var users=[
 
 var orders=[];
 var chart=null;
+var currentRole="";
 
+/* LOGIN */
 function login(){
-  var u=user.value.trim();
-  var p=pass.value.trim();
-  error.innerHTML="";
   for(var i=0;i<users.length;i++){
-    if(users[i].id===u && users[i].password===p){
+    if(users[i].id===user.value.trim() &&
+       users[i].password===pass.value.trim()){
+      currentRole=users[i].role;
       loginPage.style.display="none";
       dashboard.style.display="block";
-      roleText.innerHTML="Role: "+users[i].role;
+      roleText.innerHTML="Role: "+currentRole;
+
+      if(currentRole==="Staff"){
+        document.getElementById("menuChart").style.display="none";
+        var cols=document.getElementsByClassName("colFinance");
+        for(var j=0;j<cols.length;j++) cols[j].style.display="none";
+      }
       return;
     }
   }
   error.innerHTML="ID atau Password salah";
 }
 
-function logout(){location.reload();}
+/* LOGOUT */
+function logout(){location.reload()}
 
+/* MENU */
 function showPage(id){
   input.classList.add("hidden");
   table.classList.add("hidden");
   chart.classList.add("hidden");
   document.getElementById(id).classList.remove("hidden");
+  if(id==="table") renderTable();
+  if(id==="chart") renderChart();
 }
 
+/* TAMBAH ORDER */
 function tambahOrder(){
   orders.push({
+    no:noPesanan.value,
     tanggal:tanggal.value,
     produk:produk.value,
-    profit:jual.value-modal.value,
+    modal:Number(modal.value),
+    jual:Number(jual.value),
+    profit:Number(jual.value)-Number(modal.value),
     status:status.value
   });
-  alert("Order tersimpan");
+  alert("Order berhasil disimpan");
 }
 
+/* RENDER TABLE + EDIT STATUS */
 function renderTable(){
   tbody.innerHTML="";
   for(var i=0;i<orders.length;i++){
     var o=orders[i];
+
+    if(filterTanggal.value && o.tanggal!==filterTanggal.value) continue;
+    if(filterBulan.value && o.tanggal.substr(0,7)!==filterBulan.value) continue;
+
+    var statusHTML="";
+    if(currentRole==="Owner" || currentRole==="Admin"){
+      statusHTML=
+      "<select class='editStatus "+o.status+"' onchange='updateStatus("+i+",this.value)'>"+
+      "<option value='packing'>Packing</option>"+
+      "<option value='dikirim'>Dikirim</option>"+
+      "<option value='selesai'>Selesai</option>"+
+      "<option value='return'>Return</option>"+
+      "</select>";
+    }else{
+      statusHTML="<span class='status "+o.status+"'>"+o.status+"</span>";
+    }
+
     tbody.innerHTML+=
       "<tr>"+
+      "<td>"+o.no+"</td>"+
       "<td>"+o.tanggal+"</td>"+
       "<td>"+o.produk+"</td>"+
-      "<td>"+o.profit+"</td>"+
-      "<td><span class='status "+o.status+"'>"+o.status+"</span></td>"+
+      "<td class='colFinance'>"+o.modal+"</td>"+
+      "<td class='colFinance'>"+o.jual+"</td>"+
+      "<td class='colFinance'>"+o.profit+"</td>"+
+      "<td>"+statusHTML+"</td>"+
       "</tr>";
   }
+
+  if(currentRole==="Owner" || currentRole==="Admin"){
+    var selects=document.getElementsByClassName("editStatus");
+    for(var k=0;k<selects.length;k++){
+      selects[k].value=orders[k].status;
+    }
+  }
+}
+
+/* UPDATE STATUS */
+function updateStatus(index,value){
+  orders[index].status=value;
+  renderTable();
+}
+
+/* RESET FILTER */
+function resetFilter(){
+  filterTanggal.value="";
+  filterBulan.value="";
+  renderTable();
+}
+
+/* GRAFIK */
+function renderChart(){
+  if(chart) chart.destroy();
+  var labels=[];
+  var data=[];
+  for(var i=0;i<orders.length;i++){
+    labels.push(orders[i].produk);
+    data.push(orders[i].profit);
+  }
+  chart=new Chart(profitChart,{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{label:"Profit",data:data}]
+    }
+  });
 }
 </script>
 
