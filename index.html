@@ -256,10 +256,12 @@ function addUser(){
 }
 
 function deleteUser(i){
-  const users=JSON.parse(localStorage.getItem(USERS_KEY));
+  const users = JSON.parse(localStorage.getItem(USERS_KEY));
   users.splice(i,1);
-  localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
   loadUsers();
+}
+
 },${d.no},${d.produk},${d.modal},${d.jual},${d.status}\n`;
   });
   const a=document.createElement('a');
@@ -270,5 +272,6 @@ function deleteUser(i){
 </script>
 </body>
 </html>
+
 
 
