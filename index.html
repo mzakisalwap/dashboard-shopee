@@ -219,15 +219,24 @@ function drawChart(){
 
 /* ===== EXPORT ===== */
 function exportCSV(){
-  let csv='Tanggal,No,Produk,Modal,Jual,Status
-';
-  JSON.parse(localStorage.getItem(ORDER_KEY)||'[]').forEach(d=>{
-    csv+=`${d.tanggal},${d.no},${d.produk},${d.modal},${d.jual},${d.status}
-`;
+  let csv = "Tanggal,No,Produk,Modal,Jual,Status\n";
+  const data = JSON.parse(localStorage.getItem("shopee_orders") || "[]");
+
+  data.forEach(d => {
+    csv += [
+      d.tanggal,
+      d.no,
+      d.produk,
+      d.modal,
+      d.jual,
+      d.status
+    ].join(",") + "\n";
   });
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='report-shopee.csv';
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "report-shopee.csv";
   a.click();
 }
 
@@ -270,3 +279,4 @@ function deleteUser(i){
 </script>
 </body>
 </html>
+
