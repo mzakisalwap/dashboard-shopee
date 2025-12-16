@@ -3,199 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Bisnis Shopee – FIX AMAN</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Login Dashboard Shopee</title>
+
 <style>
-body{margin:0;font-family:Arial;background:#f4f6fb}
-.hidden{display:none}
-#loginBox{max-width:360px;margin:100px auto;background:#fff;padding:24px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
-#loginBox input,#loginBox button{width:100%;padding:10px;margin:8px 0}
-#loginBox button{background:#6c63ff;color:#fff;border:none;border-radius:8px;cursor:pointer}
-#app{padding:20px}
-.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;margin-top:20px}
-.card{background:#fff;padding:15px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin-top:20px}
-th,td{padding:8px;border-bottom:1px solid #eee;text-align:center;font-size:13px}
-th{background:#eef1ff}
-input,select{padding:6px}
-button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer}
-.btn{background:#6c63ff;color:#fff}
-.btn-danger{background:#e74c3c;color:#fff}
-.admin-only{}
-.status-Packing{background:#fff3cd}
-.status-Dikirim{background:#d1ecf1}
-.status-Selesai{background:#d4edda}
-.status-Return{background:#f8d7da}
+body{font-family:Arial;background:#f4f6fb}
+#loginBox{width:320px;margin:120px auto;background:#fff;padding:20px;border-radius:12px}
+input,button{width:100%;padding:10px;margin:8px 0}
+button{background:#6c63ff;color:#fff;border:none}
+#app{display:none;padding:20px}
 </style>
 </head>
+
 <body>
 
 <div id="loginBox">
-<h3>Login Dashboard</h3>
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+  <h3>Login</h3>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
 </div>
 
-<div id="app" class="hidden">
-<div class="header">
-<h2>Dashboard Bisnis Shopee</h2>
-<div><span id="roleInfo"></span> | <span id="today"></span> <button onclick="logout()">Logout</button></div>
-</div>
-
-<div class="dashboard">
-<div class="card">Total Order<br><b id="totalOrder">0</b></div>
-<div class="card">Packing<br><b id="packing">0</b></div>
-<div class="card">Dikirim<br><b id="dikirim">0</b></div>
-<div class="card">Selesai<br><b id="selesai">0</b></div>
-<div class="card">Return<br><b id="retur">0</b></div>
-<div class="card">Total Profit<br><b id="profit">Rp 0</b></div>
-</div>
-
-<h3>Tambah Order</h3>
-<button class="btn" onclick="addRow()">+ Tambah</button>
-<button class="btn admin-only" onclick="exportCSV()">Export CSV</button>
-
-<table id="tableOrder">
-<thead>
-<tr><th>Tanggal</th><th>No</th><th>Produk</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th class="admin-only">Aksi</th></tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<canvas id="chart" height="100"></canvas>
+<div id="app">
+  <h2>Dashboard Shopee</h2>
+  <p id="roleInfo"></p>
+  <button onclick="logout()">Logout</button>
 </div>
 
 <script>
-/* ===== USER ===== */
-var USERS_KEY="shopee_users";
-var ORDER_KEY="shopee_orders";
-
-if(!localStorage.getItem(USERS_KEY)){
-  localStorage.setItem(USERS_KEY, JSON.stringify([
-    {username:"owner",password:"owner123",role:"owner"},
-    {username:"admin",password:"admin123",role:"admin"},
-    {username:"staff",password:"staff123",role:"staff"}
-  ]));
-}
+/* USER DATA */
+var USERS = [
+  {username:"owner", password:"owner123", role:"owner"},
+  {username:"admin", password:"admin123", role:"admin"},
+  {username:"staff", password:"staff123", role:"staff"}
+];
 
 function login(){
-  var u=username.value.trim();
-  var p=password.value.trim();
-  var users=JSON.parse(localStorage.getItem(USERS_KEY));
-  var found=null;
-  for(var i=0;i<users.length;i++){
-    if(users[i].username===u && users[i].password===p){found=users[i];break;}
+  var u = document.getElementById("username").value;
+  var p = document.getElementById("password").value;
+  var found = null;
+
+  for(var i=0;i<USERS.length;i++){
+    if(USERS[i].username===u && USERS[i].password===p){
+      found = USERS[i];
+    }
   }
-  if(!found){alert("Login gagal");return;}
-  localStorage.setItem("currentUser", JSON.stringify(found));
-  loginBox.classList.add("hidden");
-  app.classList.remove("hidden");
-  roleInfo.innerText="Role: "+found.role;
-  today.innerText=new Date().toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-  if(found.role==="staff"){var a=document.getElementsByClassName("admin-only");for(var j=0;j<a.length;j++){a[j].style.display="none";}}
-  loadOrders();
-}
 
-function logout(){localStorage.removeItem("currentUser");location.reload();}
-
-/* ===== ORDER ===== */
-function addRow(d){
-  d=d||{};
-  var tr=document.createElement("tr");
-  tr.innerHTML =
-    "<td><input type='date' value='"+(d.tanggal||"")+"'></td>"+
-    "<td><input value='"+(d.no||"")+"'></td>"+
-    "<td><input value='"+(d.produk||"")+"'></td>"+
-    "<td><input type='number' value='"+(d.modal||0)+"'></td>"+
-    "<td><input type='number' value='"+(d.jual||0)+"'></td>"+
-    "<td class='margin'>0</td>"+
-    "<td><select><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td>"+
-    "<td class='admin-only'><button class='btn-danger' onclick='this.parentNode.parentNode.remove();update()'>Hapus</button></td>";
-  tableOrder.tBodies[0].appendChild(tr);
-  if(d.status){tr.getElementsByTagName('select')[0].value=d.status;}
-  calc(tr);
-}
-
-function calc(tr){
-  var modal=Number(tr.cells[3].children[0].value)||0;
-  var jual=Number(tr.cells[4].children[0].value)||0;
-  tr.querySelector('.margin').innerText=jual-modal;
-  update();
-}
-
-function update(){
-  var rows=tableOrder.tBodies[0].rows;
-  var p=0,pa=0,di=0,se=0,re=0;
-  for(var i=0;i<rows.length;i++){
-    var r=rows[i];
-    var mar=Number(r.querySelector('.margin').innerText)||0;
-    p+=mar;
-    var s=r.getElementsByTagName('select')[0].value;
-    r.className="status-"+s;
-    if(s==="Packing")pa++; if(s==="Dikirim")di++; if(s==="Selesai")se++; if(s==="Return")re++;
+  if(!found){
+    alert("Login gagal");
+    return;
   }
-  totalOrder.innerText=rows.length;
-  packing.innerText=pa; dikirim.innerText=di; selesai.innerText=se; retur.innerText=re;
-  profit.innerText="Rp "+p.toLocaleString("id-ID");
-  saveOrders();
-  drawChart();
+
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("roleInfo").innerText="Login sebagai: "+found.role;
 }
 
-function saveOrders(){
-  var data=[];
-  var rows=tableOrder.tBodies[0].rows;
-  for(var i=0;i<rows.length;i++){
-    var r=rows[i];
-    data.push({
-      tanggal:r.cells[0].children[0].value,
-      no:r.cells[1].children[0].value,
-      produk:r.cells[2].children[0].value,
-      modal:r.cells[3].children[0].value,
-      jual:r.cells[4].children[0].value,
-      status:r.getElementsByTagName('select')[0].value
-    });
-  }
-  localStorage.setItem(ORDER_KEY, JSON.stringify(data));
-}
-
-function loadOrders(){
-  var d=JSON.parse(localStorage.getItem(ORDER_KEY)||"[]");
-  for(var i=0;i<d.length;i++){addRow(d[i]);}
-  update();
-}
-
-/* ===== CHART ===== */
-var chart;
-function drawChart(){
-  var ctx=document.getElementById('chart').getContext('2d');
-  var labels=[]; var values=[];
-  var rows=tableOrder.tBodies[0].rows;
-  for(var i=0;i<rows.length;i++){
-    var t=rows[i].cells[0].children[0].value;
-    if(!t)continue;
-    var m=Number(rows[i].querySelector('.margin').innerText)||0;
-    var k=new Date(t).toLocaleDateString('id-ID',{month:'short',year:'numeric'});
-    var idx=labels.indexOf(k);
-    if(idx===-1){labels.push(k);values.push(m);} else {values[idx]+=m;}
-  }
-  if(chart)chart.destroy();
-  chart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[{label:'Profit',data:values,backgroundColor:'#6c63ff'}]}});
-}
-
-/* ===== EXPORT ===== */
-function exportCSV(){
-  var csv="Tanggal,No,Produk,Modal,Jual,Status\n";
-  var d=JSON.parse(localStorage.getItem(ORDER_KEY)||"[]");
-  for(var i=0;i<d.length;i++){
-    csv+=d[i].tanggal+","+d[i].no+","+d[i].produk+","+d[i].modal+","+d[i].jual+","+d[i].status+"\n";
-  }
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download='report-shopee.csv';
-  a.click();
+function logout(){
+  location.reload();
 }
 </script>
+
 </body>
 </html>
