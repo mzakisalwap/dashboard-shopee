@@ -2,15 +2,15 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login Dashboard Shopee</title>
-
+<title>Dashboard Shopee</title>
 <style>
 body{font-family:Arial;background:#f4f6fb}
 #loginBox{width:320px;margin:120px auto;background:#fff;padding:20px;border-radius:12px}
 input,button{width:100%;padding:10px;margin:8px 0}
 button{background:#6c63ff;color:#fff;border:none}
 #app{display:none;padding:20px}
+table{border-collapse:collapse;margin-top:20px}
+td,th{border:1px solid #ccc;padding:6px}
 </style>
 </head>
 
@@ -24,100 +24,25 @@ button{background:#6c63ff;color:#fff;border:none}
 </div>
 
 <div id="app">
-  <h2>Dashboard Shopee</h2>
+  <h2>Dashboard</h2>
   <p id="roleInfo"></p>
   <button onclick="logout()">Logout</button>
 
-  <hr>
+  <h3>Tambah Order</h3>
+  <button onclick="addOrder()">+ Tambah Order</button>
 
-  <div>
-    <b>Total Order:</b> <span id="totalOrder">0</span><br>
-    <b>Packing:</b> <span id="packing">0</span><br>
-    <b>Dikirim:</b> <span id="dikirim">0</span><br>
-    <b>Selesai:</b> <span id="selesai">0</span><br>
-    <b>Return:</b> <span id="retur">0</span><br>
-    <b>Total Profit:</b> <span id="profit">Rp 0</span>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Tanggal</th><th>No</th><th>Produk</th>
+        <th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="orderBody"></tbody>
+  </table>
 </div>
-  <hr>
-
-<h3>Tambah Order</h3>
-<button onclick="addOrder()">+ Tambah Order</button>
-
-<table border="1" cellpadding="6" cellspacing="0">
-  <thead>
-    <tr>
-      <th>Tanggal</th>
-      <th>No Pesanan</th>
-      <th>Produk</th>
-      <th>Modal</th>
-      <th>Jual</th>
-      <th>Margin</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="orderBody"></tbody>
-</table>
 
 <script>
-var orders = [];
-
-function addOrder(){
-  orders.push({
-    tanggal: "",
-    no: "",
-    produk: "",
-    modal: 0,
-    jual: 0,
-    status: "Packing"
-  });
-  renderOrders();
-}
-
-function renderOrders(){
-  var body = document.getElementById("orderBody");
-  body.innerHTML = "";
-
-  var totalProfit = 0;
-  var packing=0, dikirim=0, selesai=0, retur=0;
-
-  for(var i=0;i<orders.length;i++){
-    var o = orders[i];
-    var margin = o.jual - o.modal;
-    totalProfit += margin;
-
-    if(o.status==="Packing") packing++;
-    if(o.status==="Dikirim") dikirim++;
-    if(o.status==="Selesai") selesai++;
-    if(o.status==="Return") retur++;
-
-    body.innerHTML +=
-      "<tr>" +
-      "<td><input type='date'></td>" +
-      "<td><input></td>" +
-      "<td><input></td>" +
-      "<td><input type='number'></td>" +
-      "<td><input type='number'></td>" +
-      "<td>"+margin+"</td>" +
-      "<td>" +
-        "<select>" +
-          "<option>Packing</option>" +
-          "<option>Dikirim</option>" +
-          "<option>Selesai</option>" +
-          "<option>Return</option>" +
-        "</select>" +
-      "</td>" +
-      "</tr>";
-  }
-
-  document.getElementById("totalOrder").innerText = orders.length;
-  document.getElementById("packing").innerText = packing;
-  document.getElementById("dikirim").innerText = dikirim;
-  document.getElementById("selesai").innerText = selesai;
-  document.getElementById("retur").innerText = retur;
-  document.getElementById("profit").innerText = "Rp "+totalProfit;
-}
-  
 /* USER DATA */
 var USERS = [
   {username:"owner", password:"owner123", role:"owner"},
@@ -125,34 +50,52 @@ var USERS = [
   {username:"staff", password:"staff123", role:"staff"}
 ];
 
+var orders = [];
+
 function login(){
-  var u = document.getElementById("username").value;
-  var p = document.getElementById("password").value;
-  var found = null;
+  var u=document.getElementById("username").value;
+  var p=document.getElementById("password").value;
+  var found=null;
 
   for(var i=0;i<USERS.length;i++){
     if(USERS[i].username===u && USERS[i].password===p){
-      found = USERS[i];
+      found=USERS[i];
     }
   }
 
-  if(!found){
-    alert("Login gagal");
-    return;
-  }
+  if(!found){ alert("Login gagal"); return; }
 
   document.getElementById("loginBox").style.display="none";
   document.getElementById("app").style.display="block";
-  document.getElementById("roleInfo").innerText="Login sebagai: "+found.role;
+  document.getElementById("roleInfo").innerText="Role: "+found.role;
 }
 
-function logout(){
-  location.reload();
+function logout(){ location.reload(); }
+
+function addOrder(){
+  orders.push({modal:0,jual:0,status:"Packing"});
+  renderOrders();
+}
+
+function renderOrders(){
+  var body=document.getElementById("orderBody");
+  body.innerHTML="";
+
+  for(var i=0;i<orders.length;i++){
+    var m=orders[i].jual-orders[i].modal;
+    body.innerHTML+=
+      "<tr>"+
+      "<td><input type='date'></td>"+
+      "<td><input></td>"+
+      "<td><input></td>"+
+      "<td><input type='number'></td>"+
+      "<td><input type='number'></td>"+
+      "<td>"+m+"</td>"+
+      "<td><select><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td>"+
+      "</tr>";
+  }
 }
 </script>
 
 </body>
 </html>
-
-
-
