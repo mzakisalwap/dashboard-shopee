@@ -2,135 +2,266 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Login Multi User</title>
-<title>Dashboard</title>
+<title>Dashboard Order</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{
-  font-family:Arial;
-  background:#f4f6fb;
-  
-}
+body{margin:0;font-family:Arial;background:#f4f6fb}
+
+/* LOGIN */
 .login-box{
-  width:320px;
-  margin:120px auto;
-  background:#fff;
-  padding:20px;
-  box-shadow:0 0 10px rgba(0,0,0,.1);
+  width:320px;margin:120px auto;background:#fff;
+  padding:20px;box-shadow:0 0 10px rgba(0,0,0,.1)
 }
-input,button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
+input,select,button{
+  width:100%;padding:10px;margin-top:10px
 }
-button{
-  background:#4f46e5;
-  color:#fff;
-  border:none;
-  cursor:pointer;
+button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
+#error{color:red;text-align:center;margin-top:10px}
+
+/* DASHBOARD */
+.dashboard{display:none}
+.sidebar{
+  width:220px;height:100vh;position:fixed;
+  background:#1e293b;color:#fff;padding:10px
 }
-#error{
-  color:red;
-  margin-top:10px;
-  text-align:center;
-}
-  .sidebar{
-width:200px;height:100vh;position:fixed;
-background:#1e293b;color:#fff;padding:10px
-}
+.sidebar h3{margin:0 0 10px 0}
 .sidebar a{
-display:block;color:#fff;padding:10px;text-decoration:none
+  display:block;color:#fff;padding:10px;
+  text-decoration:none;cursor:pointer
 }
 .sidebar a:hover{background:#334155}
 
-.content{margin-left:210px;padding:20px}
-.card{background:#fff;padding:15px;margin-bottom:20px}
-  table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ddd;padding:8px;text-align:center}
+.content{
+  margin-left:230px;
+  padding:20px
+}
+
+.card{
+  background:#fff;
+  padding:15px;
+  margin-bottom:20px
+}
+.hidden{display:none}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th,td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center
+}
 th{background:#4f46e5;color:#fff}
+
+/* STATUS WARNA */
+.status{
+  padding:4px 10px;
+  border-radius:12px;
+  color:#fff;
+  font-size:12px;
+  font-weight:bold
+}
+.packing{background:#facc15;color:#000}
+.dikirim{background:#3b82f6}
+.selesai{background:#22c55e}
+.return{background:#ef4444}
+
+/* FILTER */
+.filter{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px
+}
+.filter input{
+  width:auto
 }
 </style>
 </head>
 
 <body>
 
-<div class="login-box">
+<!-- LOGIN -->
+<div class="login-box" id="loginBox">
   <h3>Login</h3>
-  <input type="text" id="user" placeholder="ID User">
-  <input type="password" id="pass" placeholder="Password">
+  <input id="user" placeholder="ID User">
+  <input id="pass" type="password" placeholder="Password">
   <button id="btnLogin">Login</button>
   <div id="error"></div>
 </div>
-  
-<div class="sidebar">
-<h3 id="role"></h3>
-<a onclick="showTable()">Data Order</a>
-<a onclick="logout()">Logout</a>
-</div>
 
-<div class="content">
-<div class="card">
-<h3>Data Order</h3>
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
 
-<table>
-<thead>
-<tr>
-<th>No</th>
-<th>Tanggal</th>
-<th>Produk</th>
-<th>Harga</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody id="tbody">
-<tr>
-<td>1</td>
-<td>2025-01-01</td>
-<td>Produk A</td>
-<td>100.000</td>
-<td>Selesai</td>
-</tr>
-</tbody>
-</table>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h3 id="roleText"></h3>
+    <a onclick="showPage('input')">Input Order</a>
+    <a onclick="showPage('table')">Data Order</a>
+    <a onclick="showPage('chart')">Grafik Profit</a>
+    <a onclick="logout()">Logout</a>
+  </div>
 
-</div>
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- INPUT ORDER -->
+    <div class="card" id="input">
+      <h3>Input Order</h3>
+      <input type="date" id="tanggal">
+      <input type="time" id="waktu">
+      <input id="produk" placeholder="Nama Produk">
+      <input type="number" id="modal" placeholder="Harga Modal">
+      <input type="number" id="jual" placeholder="Harga Jual">
+      <select id="status">
+        <option value="packing">Packing</option>
+        <option value="dikirim">Dikirim</option>
+        <option value="selesai">Selesai</option>
+        <option value="return">Return</option>
+      </select>
+      <button onclick="tambahOrder()">Simpan Order</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card hidden" id="table">
+      <h3>Data Order</h3>
+
+      <!-- FILTER -->
+      <div class="filter">
+        <input type="date" id="filterTanggal" onchange="renderTable()">
+        <input type="month" id="filterBulan" onchange="renderTable()">
+        <button onclick="resetFilter()">Reset</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Produk</th>
+            <th>Modal</th>
+            <th>Jual</th>
+            <th>Profit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- GRAFIK -->
+    <div class="card hidden" id="chart">
+      <h3>Grafik Profit</h3>
+      <canvas id="profitChart"></canvas>
+    </div>
+
+  </div>
 </div>
 
 <script>
-// DATA USER
-var users = [
-  {id:"owner", password:"owner123", role:"Owner"},
-  {id:"admin", password:"admin123", role:"Admin"},
-  {id:"staff", password:"staff123", role:"Staff"}
+/* DATA LOGIN */
+var users=[
+  {id:"owner",password:"owner123",role:"Owner"},
+  {id:"admin",password:"admin123",role:"Admin"},
+  {id:"staff",password:"staff123",role:"Staff"}
 ];
 
-// LOGIN
-document.getElementById("btnLogin").onclick = function(){
-  var u = document.getElementById("user").value.trim();
-  var p = document.getElementById("pass").value.trim();
-  var err = document.getElementById("error");
-  err.innerHTML = "";
+var orders=[];
+var chart=null;
+
+/* LOGIN */
+document.getElementById("btnLogin").onclick=function(){
+  var u=user.value.trim();
+  var p=pass.value.trim();
+  error.innerHTML="";
 
   for(var i=0;i<users.length;i++){
-    if(users[i].id === u && users[i].password === p){
-      alert("Login berhasil sebagai " + users[i].role);
-      
-      // SIMPAN ROLE (opsional)
-      localStorage.setItem("role", users[i].role);
-
-      // PINDAH HALAMAN (opsional)
-      // window.location = "dashboard.html";
+    if(users[i].id===u && users[i].password===p){
+      loginBox.style.display="none";
+      dashboard.style.display="block";
+      roleText.innerHTML="Role: "+users[i].role;
       return;
     }
   }
-  
-
-  err.innerHTML = "ID atau Password salah!";
+  error.innerHTML="ID atau Password salah!";
 };
+
+/* LOGOUT */
+function logout(){ location.reload(); }
+
+/* MENU */
+function showPage(id){
+  var pages=["input","table","chart"];
+  for(var i=0;i<pages.length;i++){
+    document.getElementById(pages[i]).className="card hidden";
+  }
+  document.getElementById(id).className="card";
+  if(id==="table") renderTable();
+  if(id==="chart") renderChart();
+}
+
+/* TAMBAH ORDER */
+function tambahOrder(){
+  orders.push({
+    tanggal:tanggal.value,
+    produk:produk.value,
+    modal:Number(modal.value),
+    jual:Number(jual.value),
+    profit:Number(jual.value)-Number(modal.value),
+    status:status.value
+  });
+  alert("Order tersimpan");
+}
+
+/* FILTER + TABLE */
+function renderTable(){
+  tbody.innerHTML="";
+  var ft=filterTanggal.value;
+  var fb=filterBulan.value;
+
+  for(var i=0;i<orders.length;i++){
+    var o=orders[i];
+
+    if(ft && o.tanggal!==ft) continue;
+    if(fb && o.tanggal.substr(0,7)!==fb) continue;
+
+    tbody.innerHTML+=
+      "<tr>"+
+      "<td>"+o.tanggal+"</td>"+
+      "<td>"+o.produk+"</td>"+
+      "<td>"+o.modal+"</td>"+
+      "<td>"+o.jual+"</td>"+
+      "<td>"+o.profit+"</td>"+
+      "<td><span class='status "+o.status+"'>"+o.status+"</span></td>"+
+      "</tr>";
+  }
+}
+
+/* RESET FILTER */
+function resetFilter(){
+  filterTanggal.value="";
+  filterBulan.value="";
+  renderTable();
+}
+
+/* GRAFIK */
+function renderChart(){
+  if(chart) chart.destroy();
+  var label=[];
+  var data=[];
+  for(var i=0;i<orders.length;i++){
+    label.push(orders[i].produk);
+    data.push(orders[i].profit);
+  }
+  chart=new Chart(profitChart,{
+    type:"bar",
+    data:{
+      labels:label,
+      datasets:[{label:"Profit",data:data}]
+    }
+  });
+}
 </script>
 
 </body>
 </html>
-
-
