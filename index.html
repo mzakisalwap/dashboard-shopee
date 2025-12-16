@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Shopee</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 
   
@@ -31,9 +29,7 @@ th{background:#eef1ff}
 .btn-small{padding:6px;font-size:12px}
 </style>
 
-
 <body>
-
 <!-- LOGIN -->
 <div id="loginBox">
   <h3>Login Dashboard</h3>
@@ -62,11 +58,6 @@ th{background:#eef1ff}
     <div class="card">Selesai<br><b id="selesai">0</b></div>
     <div class="card">Return<br><b id="retur">0</b></div>
     <div class="card">Total Profit<br><b id="profit">Rp 0</b></div>
-    <div class="card">
-  <h3>📊 Grafik Profit</h3>
-  <canvas id="profitChart" height="85"></canvas>
-</div>
-
   </div>
 
   <!-- ORDER -->
@@ -143,41 +134,11 @@ function addOrder(){
   });
   saveOrders();
   renderOrders();
-  updateDashboard();
-
 }
 
 function renderOrders(){
-  var body = document.getElementById("orderBody");
-  body.innerHTML = "";
-
-  for(var i = 0; i < orders.length; i++){
-    var o = orders[i];
-    var margin = o.jual - o.modal;
-
-    var tr = document.createElement("tr");
-    tr.className = "status-" + o.status;
-
-    tr.innerHTML =
-      "<td><input type='date' value='"+o.tanggal+"' onchange='updateField("+i+",\"tanggal\",this.value)'></td>" +
-      "<td><input value='"+o.no+"' onchange='updateField("+i+",\"no\",this.value)'></td>" +
-      "<td><input value='"+o.produk+"' onchange='updateField("+i+",\"produk\",this.value)'></td>" +
-      "<td><input type='number' value='"+o.modal+"' onchange='updateField("+i+",\"modal\",this.value)'></td>" +
-      "<td><input type='number' value='"+o.jual+"' onchange='updateField("+i+",\"jual\",this.value)'></td>" +
-      "<td>"+margin+"</td>" +
-      "<td>" +
-        "<select onchange='updateField("+i+",\"status\",this.value)'>" +
-          "<option "+(o.status==="Packing"?"selected":"")+">Packing</option>" +
-          "<option "+(o.status==="Dikirim"?"selected":"")+">Dikirim</option>" +
-          "<option "+(o.status==="Selesai"?"selected":"")+">Selesai</option>" +
-          "<option "+(o.status==="Return"?"selected":"")+">Return</option>" +
-        "</select>" +
-      "</td>" +
-      "<td><button onclick='deleteOrder("+i+")'>Hapus</button></td>";
-
-    body.appendChild(tr);
-    updateDashboard();
-  }
+  var body=document.getElementById("orderBody");
+  body.innerHTML="";
 
   for(var i=0;i<orders.length;i++){
     var o=orders[i];
@@ -212,16 +173,12 @@ function updateField(i,field,value){
   orders[i][field]=value;
   saveOrders();
   renderOrders();
-  updateDashboard();
-
 }
 
 function deleteOrder(i){
   orders.splice(i,1);
   saveOrders();
   renderOrders();
-  updateDashboard();
-
 }
 
 /* ================= DASHBOARD ================= */
@@ -254,78 +211,7 @@ function loadOrders(){
   if(data){orders=JSON.parse(data);}
   renderOrders();
 }
-
-  function updateDashboard(){
-  var total = orders.length;
-  var packing = 0;
-  var dikirim = 0;
-  var selesai = 0;
-  var retur = 0;
-  var profit = 0;
-
-  for(var i = 0; i < orders.length; i++){
-    var o = orders[i];
-    profit += (o.jual - o.modal);
-
-    if(o.status === "Packing") packing++;
-    if(o.status === "Dikirim") dikirim++;
-    if(o.status === "Selesai") selesai++;
-    if(o.status === "Return") retur++;
-  }
-
-  document.getElementById("totalOrder").innerText = total;
-  document.getElementById("packing").innerText = packing;
-  document.getElementById("dikirim").innerText = dikirim;
-  document.getElementById("selesai").innerText = selesai;
-  document.getElementById("retur").innerText = retur;
-  document.getElementById("profit").innerText =
-    "Rp " + profit.toLocaleString("id-ID");
-}
-
-  <script>
-var chart;
-
-function renderChart(){
-  var labels = [];
-  var dataProfit = [];
-
-  for(var i=0;i<orders.length;i++){
-    if(!orders[i].tanggal) continue;
-
-    var bulan = orders[i].tanggal.substring(0,7); // YYYY-MM
-    var idx = labels.indexOf(bulan);
-    var margin = orders[i].jual - orders[i].modal;
-
-    if(idx === -1){
-      labels.push(bulan);
-      dataProfit.push(margin);
-    } else {
-      dataProfit[idx] += margin;
-    }
-  }
-
-  var ctx = document.getElementById("profitChart");
-  if(chart) chart.destroy();
-
-  chart = new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{
-        label:"Profit",
-        data:dataProfit,
-        backgroundColor:"#6c63ff"
-      }]
-    }
-  });
-}
-</script>
-
 </script>
 
 </body>
 </html>
-
-
-
-
