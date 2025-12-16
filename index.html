@@ -95,23 +95,40 @@ if(!localStorage.getItem(USERS_KEY)){
   ]));
 }
 
-/* ===== LOGIN ===== */
 function login(){
-  const u=username.value.trim();
-  const p=password.value.trim();
-  const users=JSON.parse(localStorage.getItem(USERS_KEY));
-  const found=users.find(x=>x.username===u && x.password===p);
-  if(!found) return alert('Login gagal');
+  const usernameEl = document.getElementById('username');
+  const passwordEl = document.getElementById('password');
+  const loginBoxEl = document.getElementById('loginBox');
+  const appEl = document.getElementById('app');
+  const roleInfoEl = document.getElementById('roleInfo');
+  const todayEl = document.getElementById('today');
 
-  localStorage.setItem('currentUser',JSON.stringify(found));
-  loginBox.style.display='none';
-  app.style.display='block';
-  roleInfo.innerText='Role: '+found.role.toUpperCase();
-  today.innerText=new Date().toLocaleDateString('id-ID');
+  const u = usernameEl.value.trim();
+  const p = passwordEl.value.trim();
 
-  if(found.role==='staff'){
-    document.querySelectorAll('.admin-only').forEach(e=>e.style.display='none');
+  const users = JSON.parse(localStorage.getItem(USERS_KEY));
+  const found = users.find(x => x.username === u && x.password === p);
+
+  if(!found){
+    alert('Login gagal');
+    return;
   }
+
+  localStorage.setItem('currentUser', JSON.stringify(found));
+
+  loginBoxEl.style.display = 'none';
+  appEl.style.display = 'block';
+
+  roleInfoEl.innerText = 'Role: ' + found.role.toUpperCase();
+  todayEl.innerText = new Date().toLocaleDateString('id-ID');
+
+  if(found.role === 'staff'){
+    document.querySelectorAll('.admin-only')
+      .forEach(e => e.style.display = 'none');
+  }
+
+  loadOrders();
+}
 
   loadOrders();
 }
@@ -216,3 +233,4 @@ function drawChart(){
 
 </body>
 </html>
+
