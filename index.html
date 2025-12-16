@@ -90,8 +90,10 @@ th{background:#eef1ff}
 <body>
   
 </div>
-
+  
 <script>
+var currentUser = null;
+  
 /* ================= USER ================= */
 var USERS = [
   {username:"owner", password:"owner123", role:"owner"},
@@ -106,6 +108,8 @@ function login(){
   var u=document.getElementById("username").value;
   var p=document.getElementById("password").value;
   var found=null;
+  currentUser = found;
+
 
   for(var i=0;i<USERS.length;i++){
     if(USERS[i].username===u && USERS[i].password===p){
@@ -148,6 +152,7 @@ function addOrder(){
 function renderOrders(){
   var body=document.getElementById("orderBody");
   body.innerHTML="";
+  renderChart();
 
   for(var i=0;i<orders.length;i++){
     var o=orders[i];
@@ -168,8 +173,13 @@ function renderOrders(){
         "<option "+(o.status==="Dikirim"?"selected":"")+">Dikirim</option>"+
         "<option "+(o.status==="Selesai"?"selected":"")+">Selesai</option>"+
         "<option "+(o.status==="Return"?"selected":"")+">Return</option>"+
-      "</select></td>"+
-      "<td><button class='btn-danger btn-small' onclick='deleteOrder("+i+")'>Hapus</button></td>";
+      "</select></td>"+ aksi;
+
+      var aksi = "<td>-</td>";
+if(currentUser.role !== "staff"){
+  aksi = "<td><button class='btn-danger btn-small' onclick='deleteOrder("+i+")'>Hapus</button></td>";
+}
+
 
     body.appendChild(tr);
   }
@@ -220,9 +230,46 @@ function loadOrders(){
   if(data){orders=JSON.parse(data);}
   renderOrders();
 }
+  var chart;
+
+function renderChart(){
+  var labels = [];
+  var dataProfit = [];
+
+  for(var i=0;i<orders.length;i++){
+    if(!orders[i].tanggal) continue;
+
+    var bulan = orders[i].tanggal.substring(0,7); // YYYY-MM
+    var idx = labels.indexOf(bulan);
+    var margin = orders[i].jual - orders[i].modal;
+
+    if(idx === -1){
+      labels.push(bulan);
+      dataProfit.push(margin);
+    } else {
+      dataProfit[idx] += margin;
+    }
+  }
+
+  var ctx = document.getElementById("profitChart");
+  if(chart) chart.destroy();
+
+  chart = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Profit",
+        data:dataProfit,
+        backgroundColor:"#6c63ff"
+      }]
+    }
+  });
+}
 </script>
 
 </body>
 </html>
+
 
 
