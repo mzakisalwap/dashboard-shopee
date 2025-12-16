@@ -2,227 +2,142 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Shopee Business Dashboard PRO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopee Business System – Final</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-:root{
-  --primary:#6366f1; /* indigo */
-  --secondary:#ecfeff; /* soft cyan */
-  --bg:#f8fafc; /* light background */
-  --card:#ffffff;
-  --text:#0f172a;
-  --muted:#64748b;
-}
-
-body{
-  background:var(--bg);
-  font-family:'Inter', Arial, sans-serif;
-  color:var(--text);
-  margin:0;
-}
-
-header{
-  background:linear-gradient(135deg,#6366f1,#22d3ee);
-  color:white;
-  padding:20px;
-  border-radius:0 0 24px 24px;
-}
-
-.dashboard{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
-  margin:20px;
-}
-
-.card{
-  background:var(--card);
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
-}
-
-.card h3{
-  margin:0;
-  color:var(--muted);
-  font-size:14px;
-}
-
-.card p{
-  font-size:26px;
-  margin:6px 0 0;
-  font-weight:600;
-}
-
-table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0 10px;
-}
-
-thead th{
-  text-align:left;
-  padding:12px;
-  color:var(--muted);
-}
-
-tbody tr{
-  background:var(--card);
-  box-shadow:0 6px 20px rgba(0,0,0,.06);
-  border-radius:14px;
-}
-
-tbody td{
-  padding:14px;
-}
-
-tbody tr:hover{
-  transform:scale(1.01);
-  transition:.2s;
-}
-
-.status-packing{background:#fef3c7;}
-.status-dikirim{background:#e0f2fe;}
-.status-selesai{background:#dcfce7;}
-.status-return{background:#fee2e2;}
-
-button{
-  background:linear-gradient(135deg,#6366f1,#22d3ee);
-  color:white;
-  border:none;
-  padding:10px 16px;
-  border-radius:12px;
-  cursor:pointer;
-}
-
-button:hover{opacity:.9;}
+:root{--primary:#6366f1;--bg:#f8fafc;--card:#ffffff;--text:#0f172a;--muted:#64748b}
+body{margin:0;font-family:Inter,Arial;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#6366f1,#22d3ee);color:#fff;padding:20px}
+.container{padding:20px}
+.hidden{display:none}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:var(--card);padding:20px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
+.card h3{margin:0;font-size:14px;color:var(--muted)}
+.card p{margin-top:8px;font-size:26px;font-weight:600}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+input,select,button{padding:10px;border-radius:10px;border:1px solid #e5e7eb}
+button{background:linear-gradient(135deg,#6366f1,#22d3ee);color:#fff;border:none;cursor:pointer}
+table{width:100%;border-collapse:separate;border-spacing:0 10px}
+th,td{padding:12px;text-align:left}
+tbody tr{background:#fff;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.06)}
+.status-packing{background:#fef3c7}
+.status-dikirim{background:#e0f2fe}
+.status-selesai{background:#dcfce7}
+.status-return{background:#fee2e2}
+.warning{outline:3px solid red}
+.login{max-width:360px;margin:80px auto;background:#fff;padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div class="login" id="loginBox">
-<h2>🔐 Shopee Dashboard PRO</h2>
-<input id="user" placeholder="Username" value="admin">
-<input type="password" id="pass" placeholder="Password" value="admin123">
+<div id="login" class="login">
+<h2>Login Sistem</h2>
+<input id="user" placeholder="Username"><br><br>
+<input id="pass" type="password" placeholder="Password"><br><br>
 <button onclick="login()">Login</button>
-<p style="font-size:12px">Default: admin / admin123</p>
+<p id="loginErr" style="color:red"></p>
 </div>
 
 <!-- APP -->
 <div id="app" class="hidden">
-<div class="header">
-<b>📦 Shopee Business Dashboard</b>
-<div>
-<button onclick="toggleDark()">🌙</button>
+<header>
+<h1>Shopee Business System</h1>
+<div id="today"></div>
+</header>
+<div class="container">
+
+<div class="controls">
+<select id="storeFilter"></select>
+<select id="monthFilter"></select>
+<select id="yearFilter"></select>
+<input id="search" placeholder="Cari order / produk" oninput="render()">
+<button onclick="exportPDF()">Export PDF</button>
 <button onclick="logout()">Logout</button>
 </div>
+
+<div class="dashboard">
+<div class="card"><h3>Total Order</h3><p id="totalOrder">0</p></div>
+<div class="card"><h3>Packing</h3><p id="packing">0</p></div>
+<div class="card"><h3>Dikirim</h3><p id="dikirim">0</p></div>
+<div class="card"><h3>Selesai</h3><p id="selesai">0</p></div>
+<div class="card"><h3>Return</h3><p id="retur">0</p></div>
+<div class="card"><h3>Total Profit</h3><p id="profit">Rp 0</p></div>
 </div>
 
-<div class="layout">
-<div class="sidebar">
-<h3>MENU</h3>
-<button class="active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
-<button onclick="showPage('analytics',this)">📈 Analytics</button>
-<button onclick="showPage('orders',this)">📋 Orders</button>
-<button onclick="showPage('sync',this)">☁️ Sync</button>
-<button onclick="showPage('report',this)">📄 Report</button>
-</div>
-
-<div class="content">
-
-<!-- DASHBOARD -->
-<div id="dashboard" class="page">
-<div class="controls"><select id="dashFilter" onchange="render()"><option value="all">Semua</option><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select></div>
-<div class="stats">
-<div class="stat"><small>Total Order</small><h2 id="totalOrder">0</h2></div>
-<div class="stat"><small>Total Margin</small><h2 id="totalMargin">Rp0</h2></div>
-<div class="stat"><small>Packing</small><h2 id="packing">0</h2></div>
-<div class="stat"><small>Dikirim</small><h2 id="dikirim">0</h2></div>
-<div class="stat"><small>Selesai</small><h2 id="selesai">0</h2></div>
-<div class="stat"><small>Return</small><h2 id="retur">0</h2></div>
-</div>
-<div class="stat"><small>Total Margin</small><h2 id="totalMargin">Rp0</h2></div>
-<div class="stat"><small>Selesai</small><h2 id="selesai">0</h2></div>
-<div class="stat"><small>Return</small><h2 id="retur">0</h2></div>
-</div>
-</div>
-
-<!-- ANALYTICS -->
-<div id="analytics" class="page hidden">
-<div class="box">
-<h3>📊 Grafik Profit Harian</h3>
-<canvas id="chartProfit" height="85"></canvas>
-</div>
-<div class="box">
-<h3>📦 Grafik Status Order</h3>
-<canvas id="chartStatus" height="85"></canvas>
-</div>
-</div>
-
-<!-- ORDERS -->
-<div id="orders" class="page hidden">
-<div class="box">
-<h3>📋 Data Pesanan</h3>
+<h3>Tambah Order</h3>
 <div class="controls">
-<button onclick="addRow()">➕ Tambah</button>
-<input type="file" onchange="importCSV(this)">
-<button onclick="exportCSV()">⬇ Export</button>
-<select id="filterStatus" onchange="render()"><option value="">Semua Status</option><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select>
-<input type="date" id="filterDate" onchange="render()">
-</div>
-<table id="tbl"><thead><tr><th>Tgl</th><th>No</th><th>Produk</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th>❌</th></tr></thead><tbody></tbody></table>
-</div>
-</div>
-
-<!-- SYNC -->
-<div id="sync" class="page hidden">
-<div class="box">
-<h3>☁️ Google Sheets Sync</h3>
-<p>Export CSV → Upload ke Google Sheets (Auto)</p>
-<button onclick="exportCSV()">Download CSV</button>
-</div>
+<input type="date" id="tgl">
+<input placeholder="No Pesanan" id="no">
+<input placeholder="Produk" id="produk">
+<input placeholder="Kategori" id="kategori">
+<input type="number" placeholder="Modal" id="modal">
+<input type="number" placeholder="Jual" id="jual">
+<select id="status"><option>packing</option><option>dikirim</option><option>selesai</option><option>return</option></select>
+<select id="store"></select>
+<button onclick="add()">Tambah</button>
 </div>
 
-<!-- REPORT -->
-<div id="report" class="page hidden">
-<div class="box">
-<h3>📄 Backup & Laporan</h3>
-<button onclick="exportCSV()">Export Semua Data</button>
-</div>
-</div>
+<h3>Daftar Order</h3>
+<table>
+<thead><tr><th>Tgl</th><th>No</th><th>Produk</th><th>Kategori</th><th>Modal</th><th>Jual</th><th>Margin</th><th>Status</th><th>Toko</th></tr></thead>
+<tbody id="tbody"></tbody>
+</table>
 
-</div>
+<h3>Grafik Profit Bulanan</h3>
+<canvas id="chart"></canvas>
+
 </div>
 </div>
 
 <script>
-const KEY='shopee_pro';let data=[],chart1,chart2,chartDash;
-function login(){if(user.value==='admin'&&pass.value==='admin123'){loginBox.classList.add('hidden');app.classList.remove('hidden');load();}}
-function logout(){location.reload()}
-function toggleDark(){document.body.classList.toggle('dark')}
-function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-function addRow(d={}){data.push({t:d.t||'',p:d.p||'',pr:d.pr||'',m:d.m||0,j:d.j||0,s:d.s||'Packing'});save()}
-function render(){const tb=tbl.querySelector('tbody');tb.innerHTML='';let tm=0,s=0,r=0,p=0,d=0;const fs=filterStatus.value,fd=filterDate.value;data.filter(x=>(!fs||x.s===fs)&&(!fd||x.t===fd)).forEach((x,i)=>{const g=x.j-x.m;tm+=g;if(x.s==='Selesai')s++;if(x.s==='Return')r++;if(x.s==='Packing')p++;if(x.s==='Dikirim')d++;const tr=document.createElement('tr');tr.className='status-'+x.s;tr.innerHTML=`<td><input type=date value='${x.t}' onchange='upd(${i},"t",this.value)'></td><td><input value='${x.p}' onchange='upd(${i},"p",this.value)'></td><td><input value='${x.pr}' onchange='upd(${i},"pr",this.value)'></td><td><input type=number value='${x.m}' onchange='upd(${i},"m",this.value)'></td><td><input type=number value='${x.j}' onchange='upd(${i},"j",this.value)'></td><td>${g}</td><td><select onchange='upd(${i},"s",this.value)'><option>Packing</option><option>Dikirim</option><option>Selesai</option><option>Return</option></select></td><td><button onclick='delRow(${i})'>X</button></td>`;tr.querySelector('select').value=x.s;tb.appendChild(tr)});totalOrder.innerText=data.length;totalMargin.innerText='Rp'+tm.toLocaleString('id-ID');packing.innerText=p;dikirim.innerText=d;selesai.innerText=s;retur.innerText=r;drawCharts()}
-function upd(i,k,v){data[i][k]=k==='m'||k==='j'?+v:v;save()}
-function delRow(i){data.splice(i,1);save()}
-function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
-function load(){data=JSON.parse(localStorage.getItem(KEY)||'[]');render()}
-function drawCharts(){
-if(chart1)chart1.destroy();if(chart2)chart2.destroy();
-const byDate={};data.forEach(x=>{byDate[x.t]=(byDate[x.t]||0)+(x.j-x.m)});
-chart1=new Chart(chartProfit,{type:'bar',data:{labels:Object.keys(byDate),datasets:[{label:'Profit',data:Object.values(byDate),backgroundColor:'#ff5722'}]}});
-const st={Packing:0,Dikirim:0,Selesai:0,Return:0};data.forEach(x=>st[x.s]++);
-chart2=new Chart(chartStatus,{type:'doughnut',data:{labels:Object.keys(st),datasets:[{data:Object.values(st),backgroundColor:['#ff9800','#03a9f4','#4caf50','#f44336']}]}});
+// ===== AUTH =====
+const USERS=[{u:'owner',p:'12345',r:'owner'},{u:'admin',p:'12345',r:'admin'},{u:'staff',p:'12345',r:'staff'}];
+function login(){const u=user.value,p=pass.value;const f=USERS.find(x=>x.u===u&&x.p===p);if(!f){loginErr.innerText='Login gagal';return;}localStorage.setItem('role',f.r);login.classList.add('hidden');app.classList.remove('hidden');init();}
+function logout(){localStorage.clear();location.reload();}
 
-// DASHBOARD CHART
-if(chartDash)chartDash.destroy();
-chartDash=new Chart(chartDashboard,{type:'bar',data:{labels:['Packing','Dikirim','Selesai','Return'],datasets:[{label:'Jumlah Order',data:[st.Packing,st.Dikirim,st.Selesai,st.Return],backgroundColor:['#ffb74d','#64b5f6','#81c784','#e57373']}]} });
+// ===== DATA =====
+let data=JSON.parse(localStorage.getItem('orders')||'[]');
+let stores=['Shopee Utama','Shopee Affiliate'];
+const tbody=document.getElementById('tbody');
+
+document.getElementById('today').innerText=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+function init(){storeFilter.innerHTML=store.innerHTML=stores.map(s=>`<option>${s}</option>`).join('');render();buildChart();}
+
+function add(){
+ const o={tgl:tgl.value,no:no.value,produk:produk.value,kategori:kategori.value,modal:+modal.value,jual:+jual.value,status:status.value,store:store.value};
+ data.push(o);save();}
+
+function save(){localStorage.setItem('orders',JSON.stringify(data));render();buildChart();}
+
+function render(){
+ tbody.innerHTML='';let p=0,pk=0,dk=0,sl=0,rt=0;
+ data.filter(o=>o.store===storeFilter.value||!storeFilter.value).forEach(o=>{
+  const m=o.jual-o.modal;p+=m;
+  if(o.status==='packing')pk++;if(o.status==='dikirim')dk++;if(o.status==='selesai')sl++;if(o.status==='return')rt++;
+  const tr=document.createElement('tr');tr.className='status-'+o.status;
+  const days=(Date.now()-new Date(o.tgl))/86400000;
+  if((o.status==='packing'&&days>2)||(o.status==='dikirim'&&days>5))tr.classList.add('warning');
+  tr.innerHTML=`<td>${o.tgl}</td><td>${o.no}</td><td>${o.produk}</td><td>${o.kategori}</td><td>${o.modal}</td><td>${o.jual}</td><td>${m}</td><td>${o.status}</td><td>${o.store}</td>`;
+  tbody.appendChild(tr);
+ });
+ totalOrder.innerText=data.length;packing.innerText=pk;dikirim.innerText=dk;selesai.innerText=sl;retur.innerText=rt;profit.innerText='Rp '+p.toLocaleString('id-ID');
 }
-function exportCSV(){let c='Tanggal,Pesanan,Produk,Modal,Jual,Status\n';data.forEach(x=>{c+=`${x.t},${x.p},${x.pr},${x.m},${x.j},${x.s}\n`});dl(c,'shopee-report.csv')}
-function importCSV(i){const r=new FileReader();r.onload=e=>{e.target.result.split('\n').slice(1).forEach(l=>{const x=l.split(',');if(x.length>4)addRow({t:x[0],p:x[1],pr:x[2],m:+x[3],j:+x[4],s:x[5]})})};r.readAsText(i.files[0])}
-function dl(c,n){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c]));a.download=n;a.click()}
+
+// ===== CHART =====
+let chart;
+function buildChart(){
+ const ctx=document.getElementById('chart');
+ const monthly={};
+ data.forEach(o=>{const k=o.tgl?.slice(0,7);monthly[k]=(monthly[k]||0)+(o.jual-o.modal)});
+ if(chart)chart.destroy();
+ chart=new Chart(ctx,{type:'bar',data:{labels:Object.keys(monthly),datasets:[{label:'Profit',data:Object.values(monthly)}]}});
+}
+
+function exportPDF(){html2pdf().from(app).save('Laporan-Bisnis-Shopee.pdf');}
 </script>
 </body>
 </html>
