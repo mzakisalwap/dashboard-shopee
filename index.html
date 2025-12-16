@@ -1,143 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Shopee</title>
-<link rel="icon" href="data:,">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Login Multi User</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6fb}
-.login-box{width:320px;margin:120px auto;background:#fff;padding:20px}
-input,select,button{width:100%;padding:8px;margin:6px 0}
-button{background:#4f46e5;color:#fff;border:none}
-.dashboard{display:none}
-.sidebar{width:220px;background:#1e293b;color:#fff;height:100vh;position:fixed}
-.sidebar a{display:block;color:#fff;padding:12px;text-decoration:none}
-.sidebar a:hover{background:#334155}
-.content{margin-left:220px;padding:20px}
-.card{background:#fff;padding:15px;margin-bottom:20px}
-.hidden{display:none}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ddd;padding:8px;text-align:center}
-th{background:#4f46e5;color:#fff}
-.status{padding:4px 10px;border-radius:12px;color:#fff;font-size:12px}
-.packing{background:#facc15;color:#000}
-.dikirim{background:#3b82f6}
-.selesai{background:#22c55e}
-.return{background:#ef4444}
+body{
+  font-family:Arial;
+  background:#f4f6fb;
+}
+.login-box{
+  width:320px;
+  margin:120px auto;
+  background:#fff;
+  padding:20px;
+  box-shadow:0 0 10px rgba(0,0,0,.1);
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+}
+button{
+  background:#4f46e5;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+}
+#error{
+  color:red;
+  margin-top:10px;
+  text-align:center;
+}
 </style>
 </head>
 
 <body>
 
-<div class="login-box" id="loginBox">
-<h3>Login</h3>
-<input id="loginId" placeholder="ID">
-<input id="loginPass" type="password" placeholder="Password">
-<button id="btnLogin">Login</button>
-<p id="loginMsg" style="color:red"></p>
+<div class="login-box">
+  <h3>Login</h3>
+  <input type="text" id="user" placeholder="ID User">
+  <input type="password" id="pass" placeholder="Password">
+  <button id="btnLogin">Login</button>
+  <div id="error"></div>
 </div>
 
-<div class="dashboard" id="dashboard">
-<div class="sidebar">
-<a onclick="showPage('input')">Input Order</a>
-<a onclick="showPage('table')">Tabel Order</a>
-<a onclick="showPage('chart')">Grafik</a>
-<a onclick="logout()">Logout</a>
-</div>
-
-<div class="content">
-
-<div class="card" id="input">
-<input type="date" id="tanggal">
-<input type="time" id="waktu">
-<input id="no" placeholder="No Pesanan">
-<input id="produk" placeholder="Produk">
-<input id="modal" type="number" placeholder="Modal">
-<input id="jual" type="number" placeholder="Jual">
-<select id="status">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>
-<button onclick="tambahOrder()">Simpan</button>
-</div>
-
-<div class="card hidden" id="table">
-<table>
-<thead>
-<tr><th>Tanggal</th><th>No</th><th>Produk</th><th>Profit</th><th>Status</th></tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
-</div>
-
-<div class="card hidden" id="chart">
-<canvas id="profitChart"></canvas>
-</div>
-
-</div>
-</div>
-  
-</body>
-  
 <script>
-var users=[
-{id:"owner01",password:"owner123",role:"owner"},
-{id:"admin01",password:"admin123",role:"admin"},
-{id:"staff01",password:"staff123",role:"staff"}
+// DATA USER
+var users = [
+  {id:"owner", password:"owner123", role:"Owner"},
+  {id:"admin", password:"admin123", role:"Admin"},
+  {id:"staff", password:"staff123", role:"Staff"}
 ];
 
-var roleUser="";
-
-document.getElementById("btnLogin").onclick=function(){
-  var id=document.getElementById("loginId").value.trim();
-  var pass=document.getElementById("loginPass").value.trim();
-  var msg=document.getElementById("loginMsg");
-  msg.innerHTML="";
+// LOGIN
+document.getElementById("btnLogin").onclick = function(){
+  var u = document.getElementById("user").value.trim();
+  var p = document.getElementById("pass").value.trim();
+  var err = document.getElementById("error");
+  err.innerHTML = "";
 
   for(var i=0;i<users.length;i++){
-    if(users[i].id===id && users[i].password===pass){
-      roleUser=users[i].role;
-      document.getElementById("loginBox").style.display="none";
-      document.getElementById("dashboard").style.display="block";
+    if(users[i].id === u && users[i].password === p){
+      alert("Login berhasil sebagai " + users[i].role);
+      
+      // SIMPAN ROLE (opsional)
+      localStorage.setItem("role", users[i].role);
+
+      // PINDAH HALAMAN (opsional)
+      // window.location = "dashboard.html";
       return;
     }
   }
-  msg.innerHTML="ID atau Password salah";
+
+  err.innerHTML = "ID atau Password salah!";
 };
-
-function logout(){location.reload()}
-
-function showPage(id){
-var cards=document.getElementsByClassName("card")
-for(var i=0;i<cards.length;i++)cards[i].className="card hidden"
-document.getElementById(id).className="card"
-}
-
-function tambahOrder(){
-orders.push({
-tanggal:document.getElementById("tanggal").value,
-no:document.getElementById("no").value,
-produk:document.getElementById("produk").value,
-profit:document.getElementById("jual").value-document.getElementById("modal").value,
-status:document.getElementById("status").value
-})
-renderTable()
-}
-
-function renderTable(){
-var html=""
-for(var i=0;i<orders.length;i++){
-html+="<tr><td>"+orders[i].tanggal+"</td><td>"+orders[i].no+"</td><td>"+orders[i].produk+"</td><td>"+orders[i].profit+"</td><td><span class='status "+orders[i].status+"'>"+orders[i].status+"</span></td></tr>"
-}
-document.getElementById("tbody").innerHTML=html
-}
 </script>
 
 </body>
 </html>
-
-
