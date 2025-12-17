@@ -15,7 +15,7 @@ body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
 .login-box{width:340px;background:#fff;padding:28px;border-radius:12px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
 .login-box h2{text-align:center}
-.login-box input,select,button{width:100%;padding:10px;margin-top:8px}
+.login-box input,button{width:100%;padding:10px;margin-top:8px}
 button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
 #error{text-align:center;color:#dc2626}
 
@@ -31,7 +31,7 @@ button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointe
 
 /* FILTER */
 .filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.filter input,.filter select{height:28px;font-size:12px;padding:4px 6px}
+.filter input{height:28px;font-size:12px;padding:4px 6px}
 .btn-sm{height:28px;padding:4px 8px;font-size:12px;border-radius:5px}
 
 /* TABLE */
@@ -88,11 +88,7 @@ th{background:#2563eb;color:#fff}
 <!-- INPUT -->
 <div id="inputPage" class="card">
 <h3>Input Order</h3>
-<select id="toko">
-<option value="">Pilih Toko</option>
-<option>Toko A</option>
-<option>Toko B</option>
-</select>
+<input id="toko" placeholder="Nama Toko (bebas)">
 <input id="noPesanan" placeholder="No Pesanan">
 <input type="date" id="tanggal">
 <input id="produk" placeholder="Produk">
@@ -113,11 +109,7 @@ th{background:#2563eb;color:#fff}
 <div class="filter">
 <input type="date" id="fTanggal">
 <input type="month" id="fBulan">
-<select id="fToko">
-<option value="">Semua Toko</option>
-<option>Toko A</option>
-<option>Toko B</option>
-</select>
+<input id="fToko" placeholder="Filter Toko">
 <input id="fSearch" placeholder="Cari No / Produk">
 <button class="btn btn-sm" onclick="renderAll()">Filter</button>
 <button class="btn btn-sm hapus" onclick="resetFilter()">Reset</button>
@@ -192,10 +184,7 @@ th{background:#2563eb;color:#fff}
 <div class="modal" id="modalEdit">
 <div class="modal-box">
 <h3>Edit Order</h3>
-<select id="eToko">
-<option>Toko A</option>
-<option>Toko B</option>
-</select>
+<input id="eToko" placeholder="Nama Toko">
 <input type="date" id="eTanggal">
 <input id="eProduk">
 <input id="eModal">
@@ -244,17 +233,14 @@ renderAll();
 }
 
 function tambahOrder(){
-if(!toko.value){alert("Pilih toko");return;}
+if(!toko.value){alert("Nama toko wajib diisi");return;}
 const m=num(modal.value), j=num(jual.value);
 orders.push({
 no:noPesanan.value,
 toko:toko.value,
 tanggal:tanggal.value,
 produk:produk.value,
-modal:m,
-jual:j,
-profit:j-m,
-status:status.value
+modal:m,jual:j,profit:j-m,status:status.value
 });
 localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
@@ -264,7 +250,7 @@ function filtered(){
 return orders.filter(o=>{
 if(fTanggal.value && o.tanggal!==fTanggal.value) return false;
 if(fBulan.value && o.tanggal.substr(0,7)!==fBulan.value) return false;
-if(fToko.value && o.toko!==fToko.value) return false;
+if(fToko.value && !o.toko.toLowerCase().includes(fToko.value.toLowerCase())) return false;
 if(fSearch.value && !o.no.toLowerCase().includes(fSearch.value.toLowerCase()) &&
 !o.produk.toLowerCase().includes(fSearch.value.toLowerCase())) return false;
 return true;
