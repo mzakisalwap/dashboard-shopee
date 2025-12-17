@@ -83,11 +83,30 @@ th{background:#2563eb;color:#fff}
 <!-- PROFIT TOTAL -->
 <div id="profitPage" class="card hidden">
 <h3>Ringkasan Profit</h3>
-<p>Total Order: <b id="totalOrder"></b></p>
-<p>Total Profit: <b id="totalProfit"></b></p>
+
+<table>
+<tr><th>Total Order</th><th>Total Profit</th></tr>
+<tr>
+<td id="totalOrder"></td>
+<td id="totalProfit"></td>
+</tr>
+</table>
+
+<br>
+
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Total Order</th>
+<th>Total Profit</th>
+</tr>
+</thead>
+<tbody id="profitStatus"></tbody>
+</table>
 </div>
 
-<!-- PROFIT BULANAN (TABLE) -->
+<!-- PROFIT BULANAN -->
 <div id="bulanPage" class="card hidden">
 <h3>Profit Per Bulan</h3>
 <table>
@@ -180,7 +199,10 @@ renderAll();
 }
 
 function renderAll(){
-renderTable(); renderProfit(); renderBulan(); renderChart();
+renderTable();
+renderProfit();
+renderBulan();
+renderChart();
 }
 
 function renderTable(){
@@ -204,6 +226,20 @@ tbody.innerHTML+=`
 function renderProfit(){
 totalOrder.innerText=orders.length;
 totalProfit.innerText=rupiah(orders.reduce((a,b)=>a+b.profit,0));
+
+let statuses=["packing","dikirim","selesai","return"];
+profitStatus.innerHTML="";
+statuses.forEach(s=>{
+let filtered=orders.filter(o=>o.status===s);
+let totalO=filtered.length;
+let totalP=filtered.reduce((a,b)=>a+b.profit,0);
+profitStatus.innerHTML+=`
+<tr>
+<td><span class="status ${s}">${s}</span></td>
+<td>${totalO}</td>
+<td>${rupiah(totalP)}</td>
+</tr>`;
+});
 }
 
 function renderBulan(){
@@ -240,7 +276,7 @@ datasets:[{label:"Profit",data:Object.values(map)}]
 });
 }
 
-/* EXPORT EXCEL (CSV) */
+/* EXPORT EXCEL */
 function exportExcel(){
 let rows=[["No","Tanggal","Produk","Modal","Jual","Profit","Status"]];
 orders.forEach(o=>{
