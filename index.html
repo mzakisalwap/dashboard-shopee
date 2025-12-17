@@ -41,7 +41,44 @@ select.statusSelect{padding:6px;border-radius:12px}
 .return{background:#ef4444}
 
 /* FILTER */
-.filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.filter-toggle{margin-bottom:10px}
+.filter-box{
+  background:#f8fafc;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:10px
+}
+.filter{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center
+}
+.filter input{
+  height:30px;
+  font-size:12px;
+  padding:4px 6px
+}
+.btn-sm{
+  padding:4px 8px;
+  font-size:12px;
+  border-radius:4px;
+  height:30px
+}
+
+/* BADGE */
+.badges{margin-bottom:10px}
+.badge{
+  display:inline-block;
+  background:#e5e7eb;
+  padding:4px 8px;
+  border-radius:12px;
+  font-size:12px;
+  margin-right:5px
+}
+.badge span{font-weight:bold}
+
+/* BUTTON */
 .btn{padding:6px 10px;border:none;border-radius:5px;cursor:pointer}
 .edit{background:#f59e0b}
 .hapus{background:#dc2626;color:#fff}
@@ -100,13 +137,23 @@ select.statusSelect{padding:6px;border-radius:12px}
 <!-- DATA ORDER -->
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
-<div class="filter">
-<input type="date" id="filterTanggal">
-<input type="month" id="filterBulan">
-<input id="searchOrder" placeholder="Cari No / Produk">
-<button onclick="renderAll()">Filter</button>
-<button onclick="resetFilter()">Reset</button>
+
+<div class="filter-toggle">
+  <button class="btn btn-sm" onclick="toggleFilter()">Filter</button>
 </div>
+
+<div id="filterBox" class="filter-box hidden">
+  <div class="filter">
+    <input type="date" id="filterTanggal">
+    <input type="month" id="filterBulan">
+    <input id="searchOrder" placeholder="Cari No / Produk">
+
+    <button class="btn btn-sm" onclick="renderAll()">Terapkan</button>
+    <button class="btn btn-sm hapus" onclick="resetFilter()">Reset</button>
+  </div>
+</div>
+
+<div class="badges" id="filterBadges"></div>
 
 <table>
 <thead>
@@ -195,11 +242,18 @@ error.innerText="Login gagal";
 }
 function logout(){location.reload()}
 
+/* FILTER COLLAPSIBLE */
+function toggleFilter(){
+document.getElementById("filterBox").classList.toggle("hidden");
+}
+
 /* FILTER DATA TERPUSAT */
 function getFilteredOrders(){
 let q=searchOrder.value.toLowerCase();
 let ft=filterTanggal.value;
 let fb=filterBulan.value;
+
+updateBadges();
 
 return orders.filter(o=>{
 if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
@@ -207,6 +261,15 @@ if(ft && o.tanggal!==ft) return false;
 if(fb && o.tanggal.substr(0,7)!==fb) return false;
 return true;
 });
+}
+
+/* BADGE FILTER */
+function updateBadges(){
+let html="";
+if(filterTanggal.value) html+=`<span class="badge">Tanggal: <span>${filterTanggal.value}</span></span>`;
+if(filterBulan.value) html+=`<span class="badge">Bulan: <span>${filterBulan.value}</span></span>`;
+if(searchOrder.value) html+=`<span class="badge">Cari: <span>${searchOrder.value}</span></span>`;
+filterBadges.innerHTML=html;
 }
 
 /* PAGE */
@@ -308,7 +371,10 @@ document.querySelectorAll(".statusSelect").forEach((s,i)=>s.value=data[i].status
 }
 
 function resetFilter(){
-filterTanggal.value=""; filterBulan.value=""; searchOrder.value="";
+filterTanggal.value="";
+filterBulan.value="";
+searchOrder.value="";
+filterBadges.innerHTML="";
 renderAll();
 }
 
