@@ -142,7 +142,7 @@ select.statusSelect{padding:6px;border-radius:12px}
 
 <!-- RINGKASAN PROFIT -->
 <div id="profitPage" class="card hidden">
-<h3>Ringkasan Data Order (Aktual)</h3>
+<h3>Ringkasan Profit (Aktual)</h3>
 
 <p><b>Periode Aktif:</b> <span id="periodeText">Semua Data</span></p>
 
@@ -274,52 +274,30 @@ renderStatusChart();
 
 /* TABLE */
 function renderTable(){
-  let data = getFilteredOrders();
-  tbody.innerHTML = "";
-
-  data.forEach(o=>{
-    let idx = orders.indexOf(o);
-
-    let statusHTML = role === "Staff"
-      ? `<span class="status ${o.status}">${o.status}</span>`
-      : `
-        <select class="statusSelect ${o.status}"
-          onchange="ubahStatus(${idx}, this)">
-          <option value="packing">Packing</option>
-          <option value="dikirim">Dikirim</option>
-          <option value="selesai">Selesai</option>
-          <option value="return">Return</option>
-        </select>
-      `;
-
-    tbody.innerHTML += `
-      <tr>
-        <td>${o.no}</td>
-        <td>${o.tanggal}</td>
-        <td>${o.produk}</td>
-        <td>${role==="Staff"?"-":rupiah(o.modal)}</td>
-        <td>${role==="Staff"?"-":rupiah(o.jual)}</td>
-        <td>${role==="Staff"?"-":rupiah(o.profit)}</td>
-        <td>${statusHTML}</td>
-        <td>
-          ${role==="Staff" ? "-" :
-            `<button onclick="editOrder(${idx})">Edit</button>
-             <button onclick="hapusOrder(${idx})">Hapus</button>`
-          }
-        </td>
-      </tr>
-    `;
-
-    // SET VALUE SELECT (AMAN)
-    if(role !== "Staff"){
-      let select = tbody.querySelector(
-        `select[onchange^="ubahStatus(${idx}"]`
-      );
-      if(select){
-        select.value = o.status;
-      }
-    }
-  });
+let data=getFilteredOrders();
+tbody.innerHTML="";
+data.forEach(o=>{
+let idx=orders.indexOf(o);
+let statusHTML= role==="Staff"
+? `<span class="status ${o.status}">${o.status}</span>`
+: `<select class="statusSelect ${o.status}" onchange="ubahStatus(${idx},this.value)">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>`;
+tbody.innerHTML+=`
+<tr>
+<td>${o.no}</td>
+<td>${o.tanggal}</td>
+<td>${o.produk}</td>
+<td>${role==="Staff"?"-":rupiah(o.modal)}</td>
+<td>${role==="Staff"?"-":rupiah(o.jual)}</td>
+<td>${role==="Staff"?"-":rupiah(o.profit)}</td>
+<td>${statusHTML}</td>
+<td>${role==="Staff"?"-":""}</td>
+</tr>`;
+});
 }
 
 /* PROFIT SUMMARY (DENGAN BULAN) */
@@ -403,5 +381,3 @@ renderAll();
 
 </body>
 </html>
-
-
