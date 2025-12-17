@@ -13,41 +13,72 @@ body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
 
 /* LOGIN */
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
-.login-box{width:340px;background:#fff;padding:30px;border-radius:8px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
-.login-box h2{text-align:center}
-.login-box input,button{width:100%;padding:12px;margin-top:10px}
+.login-box{width:330px;background:#fff;padding:28px;border-radius:10px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
+.login-box h2{text-align:center;margin-bottom:10px}
+.login-box input,button{width:100%;padding:10px;margin-top:8px}
 button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
 #error{text-align:center;color:#dc2626}
 
 /* LAYOUT */
 #dashboard{display:none}
-.sidebar{width:240px;height:100vh;position:fixed;background:#0f172a;color:#fff;padding:20px}
-.sidebar a{display:block;padding:12px;color:#cbd5f5;text-decoration:none;border-radius:6px}
+.sidebar{width:230px;height:100vh;position:fixed;background:#0f172a;color:#fff;padding:18px}
+.sidebar a{display:block;padding:10px;color:#cbd5f5;text-decoration:none;border-radius:6px;font-size:14px}
 .sidebar a:hover{background:#1e293b;color:#fff}
-.main{margin-left:240px;padding:30px}
-.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
+.main{margin-left:230px;padding:24px}
+.card{background:#fff;padding:18px;border-radius:12px;margin-bottom:20px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
+
+/* FILTER */
+.filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filter input{
+  height:28px;
+  font-size:12px;
+  padding:3px 6px;
+}
+.btn-sm{
+  height:28px;
+  padding:4px 8px;
+  font-size:12px;
+  border-radius:5px;
+}
 
 /* TABLE */
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:center}
 th{background:#2563eb;color:#fff}
 
 /* STATUS */
-.status{padding:5px 12px;border-radius:20px;font-size:12px;color:#fff}
-select.statusSelect{padding:6px 10px;border-radius:12px;border:none;color:#fff}
+.status{padding:4px 10px;border-radius:14px;font-size:11px;color:#fff}
+select.statusSelect{
+  padding:4px 8px;
+  border-radius:12px;
+  border:none;
+  font-size:12px;
+  color:#fff;
+}
 .packing{background:#eab308;color:#000}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
 
-/* FILTER */
-.filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.filter input{height:30px;font-size:12px;padding:4px 6px}
-.btn-sm{padding:4px 8px;font-size:12px;border-radius:4px;height:30px}
-
 /* BUTTON */
-.btn{padding:6px 10px;border:none;border-radius:5px;cursor:pointer}
+.btn{padding:4px 8px;border:none;border-radius:5px;font-size:12px;cursor:pointer}
+.edit{background:#f59e0b}
 .hapus{background:#dc2626;color:#fff}
+
+/* MODAL */
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center
+}
+.modal-box{
+  width:360px;background:#fff;
+  padding:18px;border-radius:10px
+}
+.modal-box h3{margin-top:0}
+.modal-box input,select{
+  width:100%;padding:8px;margin-top:6px
+}
 </style>
 </head>
 
@@ -71,7 +102,6 @@ select.statusSelect{padding:6px 10px;border-radius:12px;border:none;color:#fff}
   <a onclick="showPage('inputPage')">Input Order</a>
   <a onclick="showPage('tablePage')">Data Order</a>
   <a onclick="showPage('profitPage')">Ringkasan Profit</a>
-  <a onclick="showPage('chartStatusPage')">Grafik Order per Status</a>
   <a onclick="logout()">Logout</a>
 </div>
 
@@ -97,6 +127,7 @@ select.statusSelect{padding:6px 10px;border-radius:12px;border:none;color:#fff}
 <!-- DATA ORDER -->
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
+
 <div class="filter">
 <input type="date" id="filterTanggal">
 <input type="month" id="filterBulan">
@@ -109,39 +140,39 @@ select.statusSelect{padding:6px 10px;border-radius:12px;border:none;color:#fff}
 <thead>
 <tr>
 <th>No</th><th>Tanggal</th><th>Produk</th>
-<th>Modal</th><th>Jual</th><th>Profit</th><th>Status</th>
+<th>Modal</th><th>Jual</th><th>Profit</th>
+<th>Status</th><th>Aksi</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
 
-<!-- RINGKASAN PROFIT -->
+<!-- PROFIT -->
 <div id="profitPage" class="card hidden">
-<h3>Ringkasan Profit (Lengkap & Aktual)</h3>
-
+<h3>Ringkasan Profit</h3>
 <p>Total Order: <b id="totalOrder"></b></p>
 <p>Total Profit: <b id="totalProfit"></b></p>
-
-<h4>Ringkasan per Status</h4>
-<table>
-<thead><tr><th>Status</th><th>Total Order</th><th>Total Profit</th></tr></thead>
-<tbody id="profitStatus"></tbody>
-</table>
-
-<h4>Ringkasan per Bulan</h4>
-<table>
-<thead><tr><th>Bulan</th><th>Total Order</th><th>Total Profit</th></tr></thead>
-<tbody id="profitPerBulan"></tbody>
-</table>
 </div>
 
-<!-- GRAFIK -->
-<div id="chartStatusPage" class="card hidden">
-<h3>Grafik Order per Status</h3>
-<canvas id="statusChart"></canvas>
+</div>
 </div>
 
+<!-- MODAL EDIT -->
+<div class="modal" id="modalEdit">
+<div class="modal-box">
+<h3>Edit Order</h3>
+<input type="date" id="eTanggal">
+<input id="eProduk">
+<input id="eModal">
+<input id="eJual">
+<select id="eStatus">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>
+<button onclick="simpanEdit()">Simpan Perubahan</button>
 </div>
 </div>
 
@@ -154,13 +185,11 @@ var users=[
 ];
 
 var orders=JSON.parse(localStorage.getItem("orders")||"[]");
-var role="", chartStatus=null;
+var role="", editIndex=null;
 
-/* RUPIAH */
+/* UTIL */
 function rupiah(n){return "Rp "+Number(n).toLocaleString("id-ID")}
 function parseRp(v){return Number(v.replace(/[^0-9]/g,""))}
-modal.oninput=()=>modal.value=rupiah(parseRp(modal.value))
-jual.oninput=()=>jual.value=rupiah(parseRp(jual.value))
 
 /* LOGIN */
 function login(){
@@ -170,7 +199,7 @@ role=u.role;
 loginPage.style.display="none";
 dashboard.style.display="block";
 roleText.innerText="Role: "+role;
-renderAll(); return;
+renderAll();return;
 }}
 error.innerText="Login gagal";
 }
@@ -178,28 +207,28 @@ function logout(){location.reload()}
 
 /* PAGE */
 function showPage(id){
-["inputPage","tablePage","profitPage","chartStatusPage"]
-.forEach(p=>document.getElementById(p).classList.add("hidden"));
+["inputPage","tablePage","profitPage"].forEach(p=>{
+document.getElementById(p).classList.add("hidden");
+});
 document.getElementById(id).classList.remove("hidden");
 renderAll();
 }
 
-/* FILTER DATA */
+/* FILTER */
 function getFilteredOrders(){
 let q=searchOrder.value.toLowerCase();
 let ft=filterTanggal.value;
 let fb=filterBulan.value;
 return orders.filter(o=>{
-if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
-if(ft && o.tanggal!==ft) return false;
-if(fb && o.tanggal.substr(0,7)!==fb) return false;
+if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q))return false;
+if(ft && o.tanggal!==ft)return false;
+if(fb && o.tanggal.substr(0,7)!==fb)return false;
 return true;
 });
-}
 
 /* CRUD */
 function tambahOrder(){
-let m=parseRp(modal.value), j=parseRp(jual.value);
+let m=parseRp(modal.value),j=parseRp(jual.value);
 orders.push({
 no:noPesanan.value,
 tanggal:tanggal.value,
@@ -210,21 +239,42 @@ localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
 }
 
-/* STATUS FIX */
-function ubahStatus(index, selectEl){
-let val = selectEl.value;
-orders[index].status = val;
+function editOrder(i){
+editIndex=i;
+let o=orders[i];
+eTanggal.value=o.tanggal;
+eProduk.value=o.produk;
+eModal.value=rupiah(o.modal);
+eJual.value=rupiah(o.jual);
+eStatus.value=o.status;
+modalEdit.style.display="flex";
+}
+
+function simpanEdit(){
+let o=orders[editIndex];
+o.tanggal=eTanggal.value;
+o.produk=eProduk.value;
+o.modal=parseRp(eModal.value);
+o.jual=parseRp(eJual.value);
+o.profit=o.jual-o.modal;
+o.status=eStatus.value;
 localStorage.setItem("orders",JSON.stringify(orders));
-selectEl.className = "statusSelect " + val;
-renderProfit();
-renderStatusChart();
+modalEdit.style.display="none";
+renderAll();
+}
+
+function hapusOrder(i){
+if(confirm("Hapus order ini?")){
+orders.splice(i,1);
+localStorage.setItem("orders",JSON.stringify(orders));
+renderAll();
+}
 }
 
 /* RENDER */
 function renderAll(){
 renderTable();
 renderProfit();
-renderStatusChart();
 }
 
 function renderTable(){
@@ -232,14 +282,6 @@ let data=getFilteredOrders();
 tbody.innerHTML="";
 data.forEach(o=>{
 let idx=orders.indexOf(o);
-let statusHTML = role==="Staff"
-? `<span class="status ${o.status}">${o.status}</span>`
-: `<select class="statusSelect ${o.status}" onchange="ubahStatus(${idx},this)">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>`;
 tbody.innerHTML+=`
 <tr>
 <td>${o.no}</td>
@@ -248,7 +290,23 @@ tbody.innerHTML+=`
 <td>${role==="Staff"?"-":rupiah(o.modal)}</td>
 <td>${role==="Staff"?"-":rupiah(o.jual)}</td>
 <td>${role==="Staff"?"-":rupiah(o.profit)}</td>
-<td>${statusHTML}</td>
+<td>
+${role==="Staff"
+? `<span class="status ${o.status}">${o.status}</span>`
+: `<select class="statusSelect ${o.status}"
+onchange="orders[${idx}].status=this.value;localStorage.setItem('orders',JSON.stringify(orders));this.className='statusSelect '+this.value;">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>`
+}
+</td>
+<td>
+${role==="Staff"?"-":
+`<button class="btn edit" onclick="editOrder(${idx})">Edit</button>
+ <button class="btn hapus" onclick="hapusOrder(${idx})">Hapus</button>`}
+</td>
 </tr>`;
 });
 if(role!=="Staff"){
@@ -263,54 +321,10 @@ searchOrder.value="";
 renderAll();
 }
 
-/* PROFIT LENGKAP */
 function renderProfit(){
 let data=getFilteredOrders();
 totalOrder.innerText=data.length;
 totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
-
-/* Per Status */
-let sts=["packing","dikirim","selesai","return"];
-profitStatus.innerHTML="";
-sts.forEach(s=>{
-let f=data.filter(o=>o.status===s);
-profitStatus.innerHTML+=`
-<tr>
-<td><span class="status ${s}">${s}</span></td>
-<td>${f.length}</td>
-<td>${rupiah(f.reduce((a,b)=>a+b.profit,0))}</td>
-</tr>`;
-});
-
-/* Per Bulan */
-let map={};
-data.forEach(o=>{
-let b=o.tanggal.substr(0,7);
-if(!map[b]) map[b]={order:0,profit:0};
-map[b].order++;
-map[b].profit+=o.profit;
-});
-profitPerBulan.innerHTML="";
-Object.keys(map).sort().forEach(b=>{
-profitPerBulan.innerHTML+=`
-<tr>
-<td>${b}</td>
-<td>${map[b].order}</td>
-<td>${rupiah(map[b].profit)}</td>
-</tr>`;
-});
-}
-
-/* CHART */
-function renderStatusChart(){
-let data=getFilteredOrders();
-if(chartStatus) chartStatus.destroy();
-let c={packing:0,dikirim:0,selesai:0,return:0};
-data.forEach(o=>c[o.status]++);
-chartStatus=new Chart(statusChart,{
-type:"bar",
-data:{labels:Object.keys(c),datasets:[{label:"Total Order",data:Object.values(c)}]}
-});
 }
 </script>
 
