@@ -2,8 +2,9 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Order</title>
+<title>Dashboard Order Shopee</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -12,7 +13,7 @@ body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
 
 /* LOGIN */
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
-.login-box{width:330px;background:#fff;padding:28px;border-radius:10px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
+.login-box{width:340px;background:#fff;padding:28px;border-radius:12px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
 .login-box h2{text-align:center}
 .login-box input,button{width:100%;padding:10px;margin-top:8px}
 button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
@@ -20,15 +21,17 @@ button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointe
 
 /* LAYOUT */
 #dashboard{display:none}
-.sidebar{width:230px;height:100vh;position:fixed;background:#0f172a;color:#fff;padding:18px}
+.sidebar{width:240px;height:100vh;position:fixed;background:#0f172a;color:#fff;padding:20px}
 .sidebar a{display:block;padding:10px;color:#cbd5f5;text-decoration:none;border-radius:6px;font-size:14px}
 .sidebar a:hover{background:#1e293b;color:#fff}
-.main{margin-left:230px;padding:24px}
+.main{margin-left:240px;padding:24px}
+
+/* CARD */
 .card{background:#fff;padding:18px;border-radius:12px;margin-bottom:20px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
 
 /* FILTER */
 .filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.filter input{height:28px;font-size:12px;padding:3px 6px}
+.filter input{height:28px;font-size:12px;padding:4px 6px}
 .btn-sm{height:28px;padding:4px 8px;font-size:12px;border-radius:5px}
 
 /* TABLE */
@@ -76,12 +79,14 @@ select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12p
   <a onclick="showPage('inputPage')">Input Order</a>
   <a onclick="showPage('tablePage')">Data Order</a>
   <a onclick="showPage('profitPage')">Ringkasan Profit</a>
+  <a onclick="showPage('packingPage')">Daily Packing</a>
+  <a onclick="showPage('chartPage')">Grafik</a>
   <a onclick="logout()">Logout</a>
 </div>
 
 <div class="main">
 
-<!-- INPUT -->
+<!-- INPUT ORDER -->
 <div id="inputPage" class="card">
 <h3>Input Order</h3>
 <input id="noPesanan" placeholder="No Pesanan">
@@ -125,45 +130,61 @@ select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12p
 <div id="profitPage" class="card hidden">
 <h3>Ringkasan Profit Lengkap</h3>
 
-<p>Total Order: <b id="totalOrder"></b></p>
-<p>Total Profit: <b id="totalProfit"></b></p>
+<table>
+<tr>
+<th>Total Order</th>
+<th>Total Modal</th>
+<th>Total Jual</th>
+<th>Total Profit</th>
+</tr>
+<tr>
+<td id="sumOrder"></td>
+<td id="sumModal"></td>
+<td id="sumJual"></td>
+<td id="sumProfit"></td>
+</tr>
+</table>
 
 <h4>Profit per Status</h4>
 <table>
-<thead><tr><th>Status</th><th>Total Order</th><th>Total Profit</th></tr></thead>
-<tbody id="profitStatus"></tbody>
+<thead><tr><th>Status</th><th>Order</th><th>Modal</th><th>Jual</th><th>Profit</th></tr></thead>
+<tbody id="byStatus"></tbody>
 </table>
 
 <h4>Profit per Bulan</h4>
 <table>
-<thead><tr><th>Bulan</th><th>Total Order</th><th>Total Profit</th></tr></thead>
-<tbody id="profitPerBulan"></tbody>
+<thead><tr><th>Bulan</th><th>Order</th><th>Profit</th></tr></thead>
+<tbody id="byMonth"></tbody>
+</table>
+
+<h4>Profit Harian</h4>
+<table>
+<thead><tr><th>Tanggal</th><th>Order</th><th>Profit</th></tr></thead>
+<tbody id="byDay"></tbody>
 </table>
 </div>
 
-</div>
+<!-- DAILY PACKING -->
+<div id="packingPage" class="card hidden">
+<h3>Daily Packing</h3>
+<table>
+<thead><tr><th>Tanggal</th><th>Jumlah Packing</th><th>Total Jual</th></tr></thead>
+<tbody id="packingTable"></tbody>
+</table>
 </div>
 
-<!-- MODAL EDIT -->
-<div class="modal" id="modalEdit">
-<div class="modal-box">
-<h3>Edit Order</h3>
-<input type="date" id="eTanggal">
-<input id="eProduk">
-<input id="eModal">
-<input id="eJual">
-<select id="eStatus">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>
-<button onclick="simpanEdit()">Simpan</button>
+<!-- GRAFIK -->
+<div id="chartPage" class="card hidden">
+<h3>Grafik</h3>
+<canvas id="chartStatus"></canvas><br><br>
+<canvas id="chartProfit"></canvas>
+</div>
+
 </div>
 </div>
 
 <script>
-/* USER */
+/* USERS */
 const users=[
 {id:"owner",password:"owner123",role:"Owner"},
 {id:"admin",password:"admin123",role:"Admin"},
@@ -171,7 +192,7 @@ const users=[
 ];
 
 let orders=JSON.parse(localStorage.getItem("orders")||"[]");
-let role="", editIndex=null;
+let role="", chart1=null, chart2=null;
 
 /* UTIL */
 const rupiah=n=>"Rp "+Number(n).toLocaleString("id-ID");
@@ -179,174 +200,151 @@ const parseRp=v=>Number(v.replace(/[^0-9]/g,""));
 
 /* LOGIN */
 function login(){
-  for(const u of users){
-    if(u.id===user.value && u.password===pass.value){
-      role=u.role;
-      loginPage.style.display="none";
-      dashboard.style.display="block";
-      roleText.innerText="Role: "+role;
-      renderAll();
-      return;
-    }
-  }
-  error.innerText="Login gagal";
+for(const u of users){
+if(u.id===user.value && u.password===pass.value){
+role=u.role;
+loginPage.style.display="none";
+dashboard.style.display="block";
+roleText.innerText="Role: "+role;
+renderAll(); return;
+}}
+error.innerText="Login gagal";
 }
 function logout(){location.reload()}
 
 /* PAGE */
 function showPage(id){
-  ["inputPage","tablePage","profitPage"].forEach(p=>document.getElementById(p).classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
-  renderAll();
+["inputPage","tablePage","profitPage","packingPage","chartPage"]
+.forEach(p=>document.getElementById(p).classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+renderAll();
 }
 
 /* FILTER */
 function getFilteredOrders(){
-  const q=searchOrder.value.toLowerCase();
-  const ft=filterTanggal.value;
-  const fb=filterBulan.value;
-  return orders.filter(o=>{
-    if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
-    if(ft && o.tanggal!==ft) return false;
-    if(fb && o.tanggal.substr(0,7)!==fb) return false;
-    return true;
-  });
+const q=searchOrder.value.toLowerCase();
+const ft=filterTanggal.value;
+const fb=filterBulan.value;
+return orders.filter(o=>{
+if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q))return false;
+if(ft && o.tanggal!==ft)return false;
+if(fb && o.tanggal.substr(0,7)!==fb)return false;
+return true;
+});
 }
 
 /* CRUD */
 function tambahOrder(){
-  const m=parseRp(modal.value), j=parseRp(jual.value);
-  orders.push({
-    no:noPesanan.value,
-    tanggal:tanggal.value,
-    produk:produk.value,
-    modal:m,jual:j,profit:j-m,status:status.value
-  });
-  localStorage.setItem("orders",JSON.stringify(orders));
-  renderAll();
-}
-
-function editOrder(i){
-  editIndex=i;
-  const o=orders[i];
-  eTanggal.value=o.tanggal;
-  eProduk.value=o.produk;
-  eModal.value=rupiah(o.modal);
-  eJual.value=rupiah(o.jual);
-  eStatus.value=o.status;
-  modalEdit.style.display="flex";
-}
-
-function simpanEdit(){
-  const o=orders[editIndex];
-  o.tanggal=eTanggal.value;
-  o.produk=eProduk.value;
-  o.modal=parseRp(eModal.value);
-  o.jual=parseRp(eJual.value);
-  o.profit=o.jual-o.modal;
-  o.status=eStatus.value;
-  localStorage.setItem("orders",JSON.stringify(orders));
-  modalEdit.style.display="none";
-  renderAll();
-}
-
-function hapusOrder(i){
-  if(confirm("Hapus order?")){
-    orders.splice(i,1);
-    localStorage.setItem("orders",JSON.stringify(orders));
-    renderAll();
-  }
+const m=parseRp(modal.value),j=parseRp(jual.value);
+orders.push({no:noPesanan.value,tanggal:tanggal.value,produk:produk.value,modal:m,jual:j,profit:j-m,status:status.value});
+localStorage.setItem("orders",JSON.stringify(orders));
+renderAll();
 }
 
 /* RENDER */
 function renderAll(){
-  renderTable();
-  renderProfit();
+renderTable();
+renderProfit();
+renderPacking();
+renderChart();
 }
 
 function renderTable(){
-  const data=getFilteredOrders();
-  tbody.innerHTML="";
-  data.forEach(o=>{
-    const idx=orders.indexOf(o);
-    tbody.innerHTML+=`
-    <tr>
-      <td>${o.no}</td>
-      <td>${o.tanggal}</td>
-      <td>${o.produk}</td>
-      <td>${role==="Staff"?"-":rupiah(o.modal)}</td>
-      <td>${role==="Staff"?"-":rupiah(o.jual)}</td>
-      <td>${role==="Staff"?"-":rupiah(o.profit)}</td>
-      <td>
-        ${role==="Staff"
-          ? `<span class="status ${o.status}">${o.status}</span>`
-          : `<select class="statusSelect ${o.status}"
-               onchange="orders[${idx}].status=this.value;
-               localStorage.setItem('orders',JSON.stringify(orders));
-               this.className='statusSelect '+this.value;">
-              <option value="packing">Packing</option>
-              <option value="dikirim">Dikirim</option>
-              <option value="selesai">Selesai</option>
-              <option value="return">Return</option>
-            </select>`
-        }
-      </td>
-      <td>
-        ${role==="Staff"?"-":
-        `<button class="btn edit" onclick="editOrder(${idx})">Edit</button>
-         <button class="btn hapus" onclick="hapusOrder(${idx})">Hapus</button>`}
-      </td>
-    </tr>`;
-  });
-
-  if(role!=="Staff"){
-    tbody.querySelectorAll("select").forEach((s,i)=>s.value=data[i].status);
-  }
+const data=getFilteredOrders();
+tbody.innerHTML="";
+data.forEach(o=>{
+tbody.innerHTML+=`
+<tr>
+<td>${o.no}</td><td>${o.tanggal}</td><td>${o.produk}</td>
+<td>${rupiah(o.modal)}</td><td>${rupiah(o.jual)}</td><td>${rupiah(o.profit)}</td>
+<td><span class="status ${o.status}">${o.status}</span></td>
+<td>-</td>
+</tr>`;
+});
 }
 
-function resetFilter(){
-  filterTanggal.value="";
-  filterBulan.value="";
-  searchOrder.value="";
-  renderAll();
-}
-
-/* PROFIT LENGKAP */
+/* PROFIT */
 function renderProfit(){
-  const data=getFilteredOrders();
-  totalOrder.innerText=data.length;
-  totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
+const data=getFilteredOrders();
+sumOrder.innerText=data.length;
+sumModal.innerText=rupiah(data.reduce((a,b)=>a+b.modal,0));
+sumJual.innerText=rupiah(data.reduce((a,b)=>a+b.jual,0));
+sumProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
 
-  // per status
-  const sts=["packing","dikirim","selesai","return"];
-  profitStatus.innerHTML="";
-  sts.forEach(s=>{
-    const f=data.filter(o=>o.status===s);
-    profitStatus.innerHTML+=`
-    <tr>
-      <td><span class="status ${s}">${s}</span></td>
-      <td>${f.length}</td>
-      <td>${rupiah(f.reduce((a,b)=>a+b.profit,0))}</td>
-    </tr>`;
-  });
+const statusMap={}, monthMap={}, dayMap={};
+data.forEach(o=>{
+if(!statusMap[o.status])statusMap[o.status]={order:0,modal:0,jual:0,profit:0};
+statusMap[o.status].order++; statusMap[o.status].modal+=o.modal;
+statusMap[o.status].jual+=o.jual; statusMap[o.status].profit+=o.profit;
 
-  // per bulan
-  const map={};
-  data.forEach(o=>{
-    const b=o.tanggal.substr(0,7);
-    if(!map[b]) map[b]={order:0,profit:0};
-    map[b].order++;
-    map[b].profit+=o.profit;
-  });
-  profitPerBulan.innerHTML="";
-  Object.keys(map).sort().forEach(b=>{
-    profitPerBulan.innerHTML+=`
-    <tr>
-      <td>${b}</td>
-      <td>${map[b].order}</td>
-      <td>${rupiah(map[b].profit)}</td>
-    </tr>`;
-  });
+const m=o.tanggal.substr(0,7);
+if(!monthMap[m])monthMap[m]={order:0,profit:0};
+monthMap[m].order++; monthMap[m].profit+=o.profit;
+
+if(!dayMap[o.tanggal])dayMap[o.tanggal]={order:0,profit:0};
+dayMap[o.tanggal].order++; dayMap[o.tanggal].profit+=o.profit;
+});
+
+byStatus.innerHTML="";
+Object.keys(statusMap).forEach(s=>{
+byStatus.innerHTML+=`
+<tr>
+<td><span class="status ${s}">${s}</span></td>
+<td>${statusMap[s].order}</td>
+<td>${rupiah(statusMap[s].modal)}</td>
+<td>${rupiah(statusMap[s].jual)}</td>
+<td>${rupiah(statusMap[s].profit)}</td>
+</tr>`;
+});
+
+byMonth.innerHTML="";
+Object.keys(monthMap).sort().forEach(m=>{
+byMonth.innerHTML+=`<tr><td>${m}</td><td>${monthMap[m].order}</td><td>${rupiah(monthMap[m].profit)}</td></tr>`;
+});
+
+byDay.innerHTML="";
+Object.keys(dayMap).sort().forEach(d=>{
+byDay.innerHTML+=`<tr><td>${d}</td><td>${dayMap[d].order}</td><td>${rupiah(dayMap[d].profit)}</td></tr>`;
+});
+}
+
+/* PACKING */
+function renderPacking(){
+const map={};
+getFilteredOrders().filter(o=>o.status==="packing").forEach(o=>{
+if(!map[o.tanggal])map[o.tanggal]={count:0,jual:0};
+map[o.tanggal].count++; map[o.tanggal].jual+=o.jual;
+});
+packingTable.innerHTML="";
+Object.keys(map).sort().forEach(t=>{
+packingTable.innerHTML+=`<tr><td>${t}</td><td>${map[t].count}</td><td>${rupiah(map[t].jual)}</td></tr>`;
+});
+}
+
+/* CHART */
+function renderChart(){
+if(chart1)chart1.destroy();
+if(chart2)chart2.destroy();
+
+const data=getFilteredOrders();
+const statusCount={packing:0,dikirim:0,selesai:0,return:0};
+data.forEach(o=>statusCount[o.status]++);
+
+chart1=new Chart(chartStatus,{
+type:"bar",
+data:{labels:Object.keys(statusCount),datasets:[{label:"Order per Status",data:Object.values(statusCount)}]}
+});
+
+const monthProfit={};
+data.forEach(o=>{
+const m=o.tanggal.substr(0,7);
+monthProfit[m]=(monthProfit[m]||0)+o.profit;
+});
+
+chart2=new Chart(chartProfit,{
+type:"line",
+data:{labels:Object.keys(monthProfit),datasets:[{label:"Profit per Bulan",data:Object.values(monthProfit)}]}
+});
 }
 </script>
 
