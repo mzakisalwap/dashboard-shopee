@@ -106,7 +106,6 @@ select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12p
 <!-- DATA ORDER -->
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
-
 <div class="filter">
 <input type="date" id="filterTanggal">
 <input type="month" id="filterBulan">
@@ -129,20 +128,56 @@ select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12p
 
 <!-- PROFIT -->
 <div id="profitPage" class="card hidden">
-<h3>Ringkasan Profit</h3>
-<p>Total Order: <b id="sumOrder"></b></p>
-<p>Total Profit: <b id="sumProfit"></b></p>
+<h3>Ringkasan Profit Lengkap</h3>
+
+<table>
+<tr>
+<th>Total Order</th><th>Total Modal</th><th>Total Jual</th><th>Total Profit</th>
+</tr>
+<tr>
+<td id="sumOrder"></td>
+<td id="sumModal"></td>
+<td id="sumJual"></td>
+<td id="sumProfit"></td>
+</tr>
+</table>
+
+<h4>Profit per Status</h4>
+<table>
+<thead><tr><th>Status</th><th>Order</th><th>Modal</th><th>Jual</th><th>Profit</th></tr></thead>
+<tbody id="byStatus"></tbody>
+</table>
+
+<h4>Profit per Bulan</h4>
+<table>
+<thead><tr><th>Bulan</th><th>Order</th><th>Profit</th></tr></thead>
+<tbody id="byMonth"></tbody>
+</table>
+
+<h4>Profit Harian</h4>
+<table>
+<thead><tr><th>Tanggal</th><th>Order</th><th>Profit</th></tr></thead>
+<tbody id="byDay"></tbody>
+</table>
 </div>
 
 <!-- DAILY PACKING -->
 <div id="packingPage" class="card hidden">
-<h3>Daily Packing (Detail Produk)</h3>
+<h3>Daily Packing</h3>
 <table>
-<thead>
-<tr><th>Tanggal</th><th>Produk</th><th>Jumlah</th><th>Total Jual</th></tr>
-</thead>
+<thead><tr><th>Tanggal</th><th>Produk</th><th>Jumlah</th><th>Total Jual</th></tr></thead>
 <tbody id="packingTable"></tbody>
 </table>
+</div>
+
+<!-- GRAFIK -->
+<div id="chartPage" class="card hidden">
+<h3>Grafik</h3>
+<canvas id="chartStatus"></canvas><br><br>
+<canvas id="chartProfit"></canvas>
+</div>
+
+</div>
 </div>
 
 <!-- MODAL EDIT -->
@@ -159,11 +194,12 @@ select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12p
 <option value="selesai">Selesai</option>
 <option value="return">Return</option>
 </select>
-<button onclick="simpanEdit()">Simpan Perubahan</button>
+<button onclick="simpanEdit()">Simpan</button>
 </div>
 </div>
 
 <script>
+/* USERS */
 const users=[
 {id:"owner",password:"owner123",role:"Owner"},
 {id:"admin",password:"admin123",role:"Admin"},
@@ -171,7 +207,7 @@ const users=[
 ];
 
 let orders=JSON.parse(localStorage.getItem("orders")||"[]");
-let role="", editIndex=null;
+let role="", editIndex=null, chart1=null, chart2=null;
 
 const rupiah=n=>"Rp "+Number(n).toLocaleString("id-ID");
 const parseRp=v=>Number(v.replace(/[^0-9]/g,""));
@@ -190,7 +226,7 @@ error.innerText="Login gagal";
 function logout(){location.reload()}
 
 function showPage(id){
-["inputPage","tablePage","profitPage","packingPage"]
+["inputPage","tablePage","profitPage","packingPage","chartPage"]
 .forEach(p=>document.getElementById(p).classList.add("hidden"));
 document.getElementById(id).classList.remove("hidden");
 renderAll();
@@ -198,34 +234,36 @@ renderAll();
 
 function tambahOrder(){
 const m=parseRp(modal.value),j=parseRp(jual.value);
-orders.push({
-no:noPesanan.value,
-tanggal:tanggal.value,
-produk:produk.value,
-modal:m,jual:j,profit:j-m,status:status.value
-});
+orders.push({no:noPesanan.value,tanggal:tanggal.value,produk:produk.value,modal:m,jual:j,profit:j-m,status:status.value});
 localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
 }
 
+function renderAll(){
+renderTable();
+renderProfit();
+renderPacking();
+renderChart();
+}
+
 function renderTable(){
 tbody.innerHTML="";
-orders.forEach((o,i)=>{
+getFilteredOrders().forEach((o,i)=>{
 tbody.innerHTML+=`
 <tr>
 <td>${o.no}</td><td>${o.tanggal}</td><td>${o.produk}</td>
-<td>${rupiah(o.modal)}</td><td>${rupiah(o.jual)}</td>
-<td>${rupiah(o.profit)}</td>
+<td>${rupiah(o.modal)}</td><td>${rupiah(o.jual)}</td><td>${rupiah(o.profit)}</td>
 <td><span class="status ${o.status}">${o.status}</span></td>
 <td>
-<button class="btn edit" onclick="editOrder(${i})">Edit</button>
-<button class="btn hapus" onclick="hapusOrder(${i})">Hapus</button>
+${role==="Staff"?"-":
+`<button class="btn edit" onclick="openEdit(${i})">Edit</button>
+<button class="btn hapus" onclick="hapusOrder(${i})">Hapus</button>`}
 </td>
 </tr>`;
 });
 }
 
-function editOrder(i){
+function openEdit(i){
 editIndex=i;
 let o=orders[i];
 eTanggal.value=o.tanggal;
@@ -257,30 +295,100 @@ renderAll();
 }
 }
 
+function getFilteredOrders(){
+const q=searchOrder.value.toLowerCase();
+const ft=filterTanggal.value;
+const fb=filterBulan.value;
+return orders.filter(o=>{
+if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q))return false;
+if(ft && o.tanggal!==ft)return false;
+if(fb && o.tanggal.substr(0,7)!==fb)return false;
+return true;
+});
+}
+
+function resetFilter(){
+filterTanggal.value="";
+filterBulan.value="";
+searchOrder.value="";
+renderAll();
+}
+
 function renderProfit(){
-sumOrder.innerText=orders.length;
-sumProfit.innerText=rupiah(orders.reduce((a,b)=>a+b.profit,0));
+const data=getFilteredOrders();
+sumOrder.innerText=data.length;
+sumModal.innerText=rupiah(data.reduce((a,b)=>a+b.modal,0));
+sumJual.innerText=rupiah(data.reduce((a,b)=>a+b.jual,0));
+sumProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
+
+const s={},m={},d={};
+data.forEach(o=>{
+s[o.status]=s[o.status]||{o:0,m:0,j:0,p:0};
+s[o.status].o++; s[o.status].m+=o.modal; s[o.status].j+=o.jual; s[o.status].p+=o.profit;
+
+const mo=o.tanggal.substr(0,7);
+m[mo]=m[mo]||{o:0,p:0};
+m[mo].o++; m[mo].p+=o.profit;
+
+d[o.tanggal]=d[o.tanggal]||{o:0,p:0};
+d[o.tanggal].o++; d[o.tanggal].p+=o.profit;
+});
+
+byStatus.innerHTML="";
+Object.keys(s).forEach(k=>{
+byStatus.innerHTML+=`
+<tr><td><span class="status ${k}">${k}</span></td>
+<td>${s[k].o}</td><td>${rupiah(s[k].m)}</td>
+<td>${rupiah(s[k].j)}</td><td>${rupiah(s[k].p)}</td></tr>`;
+});
+
+byMonth.innerHTML="";
+Object.keys(m).sort().forEach(k=>{
+byMonth.innerHTML+=`<tr><td>${k}</td><td>${m[k].o}</td><td>${rupiah(m[k].p)}</td></tr>`;
+});
+
+byDay.innerHTML="";
+Object.keys(d).sort().forEach(k=>{
+byDay.innerHTML+=`<tr><td>${k}</td><td>${d[k].o}</td><td>${rupiah(d[k].p)}</td></tr>`;
+});
 }
 
 function renderPacking(){
 const map={};
-orders.filter(o=>o.status==="packing").forEach(o=>{
-let key=o.tanggal+"|"+o.produk;
-if(!map[key]) map[key]={tgl:o.tanggal,produk:o.produk,jumlah:0,jual:0};
-map[key].jumlah++;
-map[key].jual+=o.jual;
+getFilteredOrders().filter(o=>o.status==="packing").forEach(o=>{
+const k=o.tanggal+"|"+o.produk;
+map[k]=map[k]||{t:o.tanggal,p:o.produk,n:0,j:0};
+map[k].n++; map[k].j+=o.jual;
 });
 packingTable.innerHTML="";
 Object.values(map).forEach(r=>{
-packingTable.innerHTML+=`
-<tr><td>${r.tgl}</td><td>${r.produk}</td><td>${r.jumlah}</td><td>${rupiah(r.jual)}</td></tr>`;
+packingTable.innerHTML+=`<tr><td>${r.t}</td><td>${r.p}</td><td>${r.n}</td><td>${rupiah(r.j)}</td></tr>`;
 });
 }
 
-function renderAll(){
-renderTable();
-renderProfit();
-renderPacking();
+function renderChart(){
+if(chart1)chart1.destroy();
+if(chart2)chart2.destroy();
+
+const data=getFilteredOrders();
+const sc={packing:0,dikirim:0,selesai:0,return:0};
+data.forEach(o=>sc[o.status]++);
+
+chart1=new Chart(chartStatus,{
+type:"bar",
+data:{labels:Object.keys(sc),datasets:[{label:"Order per Status",data:Object.values(sc)}]}
+});
+
+const mp={};
+data.forEach(o=>{
+const m=o.tanggal.substr(0,7);
+mp[m]=(mp[m]||0)+o.profit;
+});
+
+chart2=new Chart(chartProfit,{
+type:"line",
+data:{labels:Object.keys(mp),datasets:[{label:"Profit per Bulan",data:Object.values(mp)}]}
+});
 }
 </script>
 
