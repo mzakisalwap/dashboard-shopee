@@ -9,59 +9,30 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
-
-/* LOGIN */
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
-.login-box{
-  width:340px;background:#fff;padding:30px;
-  border-radius:8px;box-shadow:0 15px 30px rgba(0,0,0,.12)
-}
-.login-box h2{text-align:center;margin-bottom:10px}
-.login-box input,button{
-  width:100%;padding:12px;margin-top:10px
-}
+.login-box{width:340px;background:#fff;padding:30px;border-radius:8px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
+.login-box h2{text-align:center}
+.login-box input,button{width:100%;padding:12px;margin-top:10px}
 button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
-#error{text-align:center;color:#dc2626;margin-top:10px}
+#error{text-align:center;color:#dc2626}
 
-/* DASHBOARD */
 #dashboard{display:none}
-.sidebar{
-  width:240px;height:100vh;position:fixed;
-  background:#0f172a;color:#fff;padding:20px
-}
-.sidebar h3{margin:0 0 20px 0}
-.sidebar a{
-  display:block;padding:12px;margin-bottom:5px;
-  color:#cbd5f5;text-decoration:none;border-radius:6px;cursor:pointer
-}
+.sidebar{width:240px;height:100vh;position:fixed;background:#0f172a;color:#fff;padding:20px}
+.sidebar a{display:block;padding:12px;color:#cbd5f5;text-decoration:none;border-radius:6px}
 .sidebar a:hover{background:#1e293b;color:#fff}
-
 .main{margin-left:240px;padding:30px}
-.card{
-  background:#fff;padding:20px;border-radius:10px;
-  margin-bottom:20px;box-shadow:0 8px 20px rgba(0,0,0,.05)
-}
+.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
 .hidden{display:none}
 
-/* TABLE */
 table{width:100%;border-collapse:collapse}
 th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center}
 th{background:#2563eb;color:#fff}
 
-/* STATUS */
 .status{padding:5px 12px;border-radius:20px;font-size:12px;color:#fff}
 .packing{background:#eab308;color:#000}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
-
-/* BUTTON */
-.btn{padding:6px 10px;border:none;border-radius:5px;cursor:pointer}
-.edit{background:#f59e0b;color:#000}
-.hapus{background:#dc2626;color:#fff}
-
-/* PROFIT TABLE */
-.profit-table td{font-weight:bold}
 </style>
 </head>
 
@@ -80,13 +51,13 @@ th{background:#2563eb;color:#fff}
 
 <!-- DASHBOARD -->
 <div id="dashboard">
-
 <div class="sidebar">
   <h3 id="roleText"></h3>
   <a onclick="showPage('inputPage')">Input Order</a>
-  <a onclick="showPage('profitPage')">Table Profit</a>
+  <a onclick="showPage('profitPage')">Ringkasan Profit</a>
+  <a onclick="showPage('bulanPage')">Profit Bulanan</a>
   <a onclick="showPage('tablePage')">Data Order</a>
-  <a onclick="showPage('chartPage')" id="menuChart">Grafik</a>
+  <a onclick="showPage('chartPage')" id="menuChart">Grafik Bulanan</a>
   <a onclick="logout()">Logout</a>
 </div>
 
@@ -109,32 +80,35 @@ th{background:#2563eb;color:#fff}
 <button onclick="tambahOrder()">Simpan</button>
 </div>
 
-<!-- PROFIT TABLE -->
+<!-- PROFIT TOTAL -->
 <div id="profitPage" class="card hidden">
 <h3>Ringkasan Profit</h3>
-<table class="profit-table">
-<tr><th>Total Order</th><th>Total Profit</th></tr>
-<tr>
-<td id="totalOrder">0</td>
-<td id="totalProfit">Rp 0</td>
-</tr>
-</table>
-<br>
-<table class="profit-table">
-<tr><th>Status</th><th>Total Profit</th></tr>
-<tbody id="profitStatus"></tbody>
+<p>Total Order: <b id="totalOrder"></b></p>
+<p>Total Profit: <b id="totalProfit"></b></p>
+</div>
+
+<!-- PROFIT BULANAN (TABLE) -->
+<div id="bulanPage" class="card hidden">
+<h3>Profit Per Bulan</h3>
+<table>
+<thead>
+<tr><th>Bulan</th><th>Total Order</th><th>Total Profit</th></tr>
+</thead>
+<tbody id="bulanTable"></tbody>
 </table>
 </div>
 
 <!-- DATA ORDER -->
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
+<input id="searchOrder" placeholder="Cari No Pesanan / Produk" oninput="renderTable()">
+<button onclick="exportExcel()">Export Excel</button>
 <table>
 <thead>
 <tr>
 <th>No</th><th>Tanggal</th><th>Produk</th>
 <th>Modal</th><th>Jual</th><th>Profit</th>
-<th>Status</th><th>Aksi</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -143,7 +117,7 @@ th{background:#2563eb;color:#fff}
 
 <!-- CHART -->
 <div id="chartPage" class="card hidden">
-<h3>Grafik Profit</h3>
+<h3>Grafik Profit Per Bulan</h3>
 <canvas id="profitChart"></canvas>
 </div>
 
@@ -160,36 +134,33 @@ var users=[
 var orders=JSON.parse(localStorage.getItem("orders")||"[]");
 var role="", chart=null;
 
-/* FORMAT RUPIAH */
-function rupiah(n){
-  return "Rp " + n.toLocaleString("id-ID");
-}
-function parseRupiah(v){
-  return Number(v.replace(/[^0-9]/g,""));
-}
-modal.oninput=function(){ this.value=rupiah(parseRupiah(this.value)) }
-jual.oninput=function(){ this.value=rupiah(parseRupiah(this.value)) }
+/* RUPIAH */
+function rupiah(n){return "Rp "+n.toLocaleString("id-ID")}
+function parseRp(v){return Number(v.replace(/[^0-9]/g,""))}
+modal.oninput=()=>modal.value=rupiah(parseRp(modal.value))
+jual.oninput=()=>jual.value=rupiah(parseRp(jual.value))
 
 function login(){
-for(var i=0;i<users.length;i++){
-if(users[i].id===user.value&&users[i].password===pass.value){
-role=users[i].role;
+for(var u of users){
+if(u.id===user.value&&u.password===pass.value){
+role=u.role;
 loginPage.style.display="none";
 dashboard.style.display="block";
-roleText.innerHTML="Role: "+role;
+roleText.innerText="Role: "+role;
 if(role==="Staff"){
-  document.getElementById("profitPage").style.display="none";
-  document.getElementById("menuChart").style.display="none";
+["profitPage","bulanPage","menuChart"].forEach(id=>{
+let el=document.getElementById(id); if(el) el.style.display="none";
+});
 }
 renderAll(); return;
 }}
-error.innerHTML="Login gagal";
+error.innerText="Login gagal";
 }
 
 function logout(){location.reload()}
 
 function showPage(id){
-["inputPage","profitPage","tablePage","chartPage"].forEach(p=>{
+["inputPage","profitPage","bulanPage","tablePage","chartPage"].forEach(p=>{
 document.getElementById(p).classList.add("hidden");
 });
 document.getElementById(id).classList.remove("hidden");
@@ -197,8 +168,7 @@ if(id==="chartPage") renderChart();
 }
 
 function tambahOrder(){
-var m=parseRupiah(modal.value);
-var j=parseRupiah(jual.value);
+let m=parseRp(modal.value), j=parseRp(jual.value);
 orders.push({
 no:noPesanan.value,
 tanggal:tanggal.value,
@@ -210,16 +180,16 @@ renderAll();
 }
 
 function renderAll(){
-renderTable();
-renderProfit();
-renderChart();
+renderTable(); renderProfit(); renderBulan(); renderChart();
 }
 
 function renderTable(){
+let q=searchOrder.value.toLowerCase();
 tbody.innerHTML="";
-orders.forEach((o,i)=>{
-tbody.innerHTML+=
-`<tr>
+orders.filter(o=>o.no.toLowerCase().includes(q)||o.produk.toLowerCase().includes(q))
+.forEach(o=>{
+tbody.innerHTML+=`
+<tr>
 <td>${o.no}</td>
 <td>${o.tanggal}</td>
 <td>${o.produk}</td>
@@ -227,7 +197,6 @@ tbody.innerHTML+=
 <td>${role==="Staff"?"-":rupiah(o.jual)}</td>
 <td>${role==="Staff"?"-":rupiah(o.profit)}</td>
 <td><span class="status ${o.status}">${o.status}</span></td>
-<td>${role==="Staff"?"-":`<button class="btn hapus" onclick="hapus(${i})">Hapus</button>`}</td>
 </tr>`;
 });
 }
@@ -235,30 +204,60 @@ tbody.innerHTML+=
 function renderProfit(){
 totalOrder.innerText=orders.length;
 totalProfit.innerText=rupiah(orders.reduce((a,b)=>a+b.profit,0));
-profitStatus.innerHTML="";
-["packing","dikirim","selesai","return"].forEach(s=>{
-let t=orders.filter(o=>o.status===s).reduce((a,b)=>a+b.profit,0);
-profitStatus.innerHTML+=`<tr><td><span class="status ${s}">${s}</span></td><td>${rupiah(t)}</td></tr>`;
-});
 }
 
-function hapus(i){
-if(confirm("Hapus order?")){
-orders.splice(i,1);
-localStorage.setItem("orders",JSON.stringify(orders));
-renderAll();
-}
+function renderBulan(){
+let map={};
+orders.forEach(o=>{
+let b=o.tanggal.substr(0,7);
+if(!map[b]) map[b]={order:0,profit:0};
+map[b].order++; map[b].profit+=o.profit;
+});
+bulanTable.innerHTML="";
+Object.keys(map).sort().forEach(b=>{
+bulanTable.innerHTML+=`
+<tr>
+<td>${b}</td>
+<td>${map[b].order}</td>
+<td>${rupiah(map[b].profit)}</td>
+</tr>`;
+});
 }
 
 function renderChart(){
 if(chart) chart.destroy();
+let map={};
+orders.forEach(o=>{
+let b=o.tanggal.substr(0,7);
+map[b]=(map[b]||0)+o.profit;
+});
 chart=new Chart(profitChart,{
 type:"bar",
 data:{
-labels:orders.map(o=>o.produk),
-datasets:[{label:"Profit",data:orders.map(o=>o.profit)}]
+labels:Object.keys(map),
+datasets:[{label:"Profit",data:Object.values(map)}]
 }
 });
+}
+
+/* EXPORT EXCEL (CSV) */
+function exportExcel(){
+let rows=[["No","Tanggal","Produk","Modal","Jual","Profit","Status"]];
+orders.forEach(o=>{
+rows.push([
+o.no,o.tanggal,o.produk,
+role==="Staff"?"":o.modal,
+role==="Staff"?"":o.jual,
+role==="Staff"?"":o.profit,
+o.status
+]);
+});
+let csv=rows.map(r=>r.join(",")).join("\n");
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="data_order.csv";
+a.click();
 }
 </script>
 
