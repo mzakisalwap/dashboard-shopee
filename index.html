@@ -42,40 +42,14 @@ select.statusSelect{padding:6px;border-radius:12px}
 
 /* FILTER */
 .filter-toggle{margin-bottom:10px}
-.filter-box{
-  background:#f8fafc;
-  padding:10px;
-  border-radius:8px;
-  margin-bottom:10px
-}
-.filter{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  align-items:center
-}
-.filter input{
-  height:30px;
-  font-size:12px;
-  padding:4px 6px
-}
-.btn-sm{
-  padding:4px 8px;
-  font-size:12px;
-  border-radius:4px;
-  height:30px
-}
+.filter-box{background:#f8fafc;padding:10px;border-radius:8px;margin-bottom:10px}
+.filter{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter input{height:30px;font-size:12px;padding:4px 6px}
+.btn-sm{padding:4px 8px;font-size:12px;border-radius:4px;height:30px}
 
 /* BADGE */
 .badges{margin-bottom:10px}
-.badge{
-  display:inline-block;
-  background:#e5e7eb;
-  padding:4px 8px;
-  border-radius:12px;
-  font-size:12px;
-  margin-right:5px
-}
+.badge{display:inline-block;background:#e5e7eb;padding:4px 8px;border-radius:12px;font-size:12px;margin-right:5px}
 .badge span{font-weight:bold}
 
 /* BUTTON */
@@ -147,7 +121,6 @@ select.statusSelect{padding:6px;border-radius:12px}
     <input type="date" id="filterTanggal">
     <input type="month" id="filterBulan">
     <input id="searchOrder" placeholder="Cari No / Produk">
-
     <button class="btn btn-sm" onclick="renderAll()">Terapkan</button>
     <button class="btn btn-sm hapus" onclick="resetFilter()">Reset</button>
   </div>
@@ -167,14 +140,34 @@ select.statusSelect{padding:6px;border-radius:12px}
 </table>
 </div>
 
-<!-- PROFIT -->
+<!-- RINGKASAN PROFIT -->
 <div id="profitPage" class="card hidden">
 <h3>Ringkasan Profit (Aktual)</h3>
-<p>Total Order: <b id="totalOrder"></b></p>
-<p>Total Profit: <b id="totalProfit"></b></p>
+
+<p><b>Periode Aktif:</b> <span id="periodeText">Semua Data</span></p>
+
+<table>
+<tr><th>Total Order</th><th>Total Profit</th></tr>
+<tr>
+<td id="totalOrder"></td>
+<td id="totalProfit"></td>
+</tr>
+</table>
+
+<br>
+
+<h4>Ringkasan per Status</h4>
 <table>
 <thead><tr><th>Status</th><th>Total Order</th><th>Total Profit</th></tr></thead>
 <tbody id="profitStatus"></tbody>
+</table>
+
+<br>
+
+<h4>Ringkasan per Bulan</h4>
+<table>
+<thead><tr><th>Bulan</th><th>Total Order</th><th>Total Profit</th></tr></thead>
+<tbody id="profitPerBulan"></tbody>
 </table>
 </div>
 
@@ -190,24 +183,6 @@ select.statusSelect{padding:6px;border-radius:12px}
 <canvas id="statusChart"></canvas>
 </div>
 
-</div>
-</div>
-
-<!-- MODAL EDIT -->
-<div class="modal" id="modalEdit">
-<div class="modal-box">
-<h3>Edit Order</h3>
-<input id="eTanggal" type="date">
-<input id="eProduk">
-<input id="eModal">
-<input id="eJual">
-<select id="eStatus">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>
-<button onclick="simpanEdit()">Simpan</button>
 </div>
 </div>
 
@@ -242,34 +217,30 @@ error.innerText="Login gagal";
 }
 function logout(){location.reload()}
 
-/* FILTER COLLAPSIBLE */
+/* FILTER */
 function toggleFilter(){
 document.getElementById("filterBox").classList.toggle("hidden");
 }
-
-/* FILTER DATA TERPUSAT */
-function getFilteredOrders(){
-let q=searchOrder.value.toLowerCase();
-let ft=filterTanggal.value;
-let fb=filterBulan.value;
-
-updateBadges();
-
-return orders.filter(o=>{
-if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
-if(ft && o.tanggal!==ft) return false;
-if(fb && o.tanggal.substr(0,7)!==fb) return false;
-return true;
-});
-}
-
-/* BADGE FILTER */
 function updateBadges(){
 let html="";
 if(filterTanggal.value) html+=`<span class="badge">Tanggal: <span>${filterTanggal.value}</span></span>`;
 if(filterBulan.value) html+=`<span class="badge">Bulan: <span>${filterBulan.value}</span></span>`;
 if(searchOrder.value) html+=`<span class="badge">Cari: <span>${searchOrder.value}</span></span>`;
 filterBadges.innerHTML=html;
+}
+
+/* FILTERED DATA */
+function getFilteredOrders(){
+let q=searchOrder.value.toLowerCase();
+let ft=filterTanggal.value;
+let fb=filterBulan.value;
+updateBadges();
+return orders.filter(o=>{
+if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
+if(ft && o.tanggal!==ft) return false;
+if(fb && o.tanggal.substr(0,7)!==fb) return false;
+return true;
+});
 }
 
 /* PAGE */
@@ -293,45 +264,7 @@ localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
 }
 
-function editOrder(i){
-editIndex=i;
-let o=orders[i];
-eTanggal.value=o.tanggal;
-eProduk.value=o.produk;
-eModal.value=rupiah(o.modal);
-eJual.value=rupiah(o.jual);
-eStatus.value=o.status;
-modalEdit.style.display="flex";
-}
-
-function simpanEdit(){
-let o=orders[editIndex];
-o.tanggal=eTanggal.value;
-o.produk=eProduk.value;
-o.modal=parseRp(eModal.value);
-o.jual=parseRp(eJual.value);
-o.profit=o.jual-o.modal;
-o.status=eStatus.value;
-localStorage.setItem("orders",JSON.stringify(orders));
-modalEdit.style.display="none";
-renderAll();
-}
-
-function hapusOrder(i){
-if(confirm("Hapus order?")){
-orders.splice(i,1);
-localStorage.setItem("orders",JSON.stringify(orders));
-renderAll();
-}
-}
-
-function ubahStatus(i,val){
-orders[i].status=val;
-localStorage.setItem("orders",JSON.stringify(orders));
-renderAll();
-}
-
-/* RENDER */
+/* RENDER ALL */
 function renderAll(){
 renderTable();
 renderProfit();
@@ -339,6 +272,7 @@ renderProfitChart();
 renderStatusChart();
 }
 
+/* TABLE */
 function renderTable(){
 let data=getFilteredOrders();
 tbody.innerHTML="";
@@ -352,7 +286,6 @@ let statusHTML= role==="Staff"
 <option value="selesai">Selesai</option>
 <option value="return">Return</option>
 </select>`;
-
 tbody.innerHTML+=`
 <tr>
 <td>${o.no}</td>
@@ -362,26 +295,24 @@ tbody.innerHTML+=`
 <td>${role==="Staff"?"-":rupiah(o.jual)}</td>
 <td>${role==="Staff"?"-":rupiah(o.profit)}</td>
 <td>${statusHTML}</td>
-<td>${role==="Staff"?"-":
-`<button class="btn edit" onclick="editOrder(${idx})">Edit</button>
- <button class="btn hapus" onclick="hapusOrder(${idx})">Hapus</button>`}</td>
+<td>${role==="Staff"?"-":""}</td>
 </tr>`;
 });
-document.querySelectorAll(".statusSelect").forEach((s,i)=>s.value=data[i].status);
 }
 
-function resetFilter(){
-filterTanggal.value="";
-filterBulan.value="";
-searchOrder.value="";
-filterBadges.innerHTML="";
-renderAll();
-}
-
+/* PROFIT SUMMARY (DENGAN BULAN) */
 function renderProfit(){
 let data=getFilteredOrders();
 totalOrder.innerText=data.length;
 totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
+
+/* Periode Text */
+let periode="Semua Data";
+if(filterTanggal.value) periode="Tanggal "+filterTanggal.value;
+else if(filterBulan.value) periode="Bulan "+filterBulan.value;
+document.getElementById("periodeText").innerText=periode;
+
+/* Per Status */
 let sts=["packing","dikirim","selesai","return"];
 profitStatus.innerHTML="";
 sts.forEach(s=>{
@@ -393,8 +324,26 @@ profitStatus.innerHTML+=`
 <td>${rupiah(f.reduce((a,b)=>a+b.profit,0))}</td>
 </tr>`;
 });
+
+/* Per Bulan */
+let map={};
+data.forEach(o=>{
+let b=o.tanggal.substr(0,7);
+if(!map[b]) map[b]={order:0,profit:0};
+map[b].order++; map[b].profit+=o.profit;
+});
+profitPerBulan.innerHTML="";
+Object.keys(map).sort().forEach(b=>{
+profitPerBulan.innerHTML+=`
+<tr>
+<td>${b}</td>
+<td>${map[b].order}</td>
+<td>${rupiah(map[b].profit)}</td>
+</tr>`;
+});
 }
 
+/* CHARTS */
 function renderProfitChart(){
 let data=getFilteredOrders();
 if(chartProfit) chartProfit.destroy();
@@ -408,7 +357,6 @@ type:"bar",
 data:{labels:Object.keys(map),datasets:[{label:"Profit",data:Object.values(map)}]}
 });
 }
-
 function renderStatusChart(){
 let data=getFilteredOrders();
 if(chartStatus) chartStatus.destroy();
@@ -418,6 +366,16 @@ chartStatus=new Chart(statusChart,{
 type:"bar",
 data:{labels:Object.keys(c),datasets:[{label:"Total Order",data:Object.values(c)}]}
 });
+}
+function resetFilter(){
+filterTanggal.value=""; filterBulan.value=""; searchOrder.value="";
+filterBadges.innerHTML="";
+renderAll();
+}
+function ubahStatus(i,val){
+orders[i].status=val;
+localStorage.setItem("orders",JSON.stringify(orders));
+renderAll();
 }
 </script>
 
