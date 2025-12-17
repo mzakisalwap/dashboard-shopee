@@ -14,7 +14,7 @@ body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
 /* LOGIN */
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
 .login-box{width:330px;background:#fff;padding:28px;border-radius:10px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
-.login-box h2{text-align:center;margin-bottom:10px}
+.login-box h2{text-align:center}
 .login-box input,button{width:100%;padding:10px;margin-top:8px}
 button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
 #error{text-align:center;color:#dc2626}
@@ -29,17 +29,8 @@ button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointe
 
 /* FILTER */
 .filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.filter input{
-  height:28px;
-  font-size:12px;
-  padding:3px 6px;
-}
-.btn-sm{
-  height:28px;
-  padding:4px 8px;
-  font-size:12px;
-  border-radius:5px;
-}
+.filter input{height:28px;font-size:12px;padding:3px 6px}
+.btn-sm{height:28px;padding:4px 8px;font-size:12px;border-radius:5px}
 
 /* TABLE */
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -48,13 +39,7 @@ th{background:#2563eb;color:#fff}
 
 /* STATUS */
 .status{padding:4px 10px;border-radius:14px;font-size:11px;color:#fff}
-select.statusSelect{
-  padding:4px 8px;
-  border-radius:12px;
-  border:none;
-  font-size:12px;
-  color:#fff;
-}
+select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12px;color:#fff}
 .packing{background:#eab308;color:#000}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
@@ -66,19 +51,9 @@ select.statusSelect{
 .hapus{background:#dc2626;color:#fff}
 
 /* MODAL */
-.modal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.45);
-  display:none;align-items:center;justify-content:center
-}
-.modal-box{
-  width:360px;background:#fff;
-  padding:18px;border-radius:10px
-}
-.modal-box h3{margin-top:0}
-.modal-box input,select{
-  width:100%;padding:8px;margin-top:6px
-}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center}
+.modal-box{width:360px;background:#fff;padding:18px;border-radius:10px}
+.modal-box input,select{width:100%;padding:8px;margin-top:6px}
 </style>
 </head>
 
@@ -172,163 +147,166 @@ select.statusSelect{
 <option value="selesai">Selesai</option>
 <option value="return">Return</option>
 </select>
-<button onclick="simpanEdit()">Simpan Perubahan</button>
+<button onclick="simpanEdit()">Simpan</button>
 </div>
 </div>
 
 <script>
 /* USER */
-var users=[
+const users=[
 {id:"owner",password:"owner123",role:"Owner"},
 {id:"admin",password:"admin123",role:"Admin"},
 {id:"staff",password:"staff123",role:"Staff"}
 ];
 
-var orders=JSON.parse(localStorage.getItem("orders")||"[]");
-var role="", editIndex=null;
+let orders=JSON.parse(localStorage.getItem("orders")||"[]");
+let role="", editIndex=null;
 
 /* UTIL */
-function rupiah(n){return "Rp "+Number(n).toLocaleString("id-ID")}
-function parseRp(v){return Number(v.replace(/[^0-9]/g,""))}
+const rupiah=n=>"Rp "+Number(n).toLocaleString("id-ID");
+const parseRp=v=>Number(v.replace(/[^0-9]/g,""));
 
 /* LOGIN */
 function login(){
-for(let u of users){
-if(u.id===user.value && u.password===pass.value){
-role=u.role;
-loginPage.style.display="none";
-dashboard.style.display="block";
-roleText.innerText="Role: "+role;
-renderAll();return;
-}}
-error.innerText="Login gagal";
+  for(const u of users){
+    if(u.id===user.value && u.password===pass.value){
+      role=u.role;
+      loginPage.style.display="none";
+      dashboard.style.display="block";
+      roleText.innerText="Role: "+role;
+      renderAll();
+      return;
+    }
+  }
+  error.innerText="Login gagal";
 }
 function logout(){location.reload()}
 
 /* PAGE */
 function showPage(id){
-["inputPage","tablePage","profitPage"].forEach(p=>{
-document.getElementById(p).classList.add("hidden");
-});
-document.getElementById(id).classList.remove("hidden");
-renderAll();
+  ["inputPage","tablePage","profitPage"].forEach(p=>document.getElementById(p).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  renderAll();
 }
 
 /* FILTER */
 function getFilteredOrders(){
-let q=searchOrder.value.toLowerCase();
-let ft=filterTanggal.value;
-let fb=filterBulan.value;
-return orders.filter(o=>{
-if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q))return false;
-if(ft && o.tanggal!==ft)return false;
-if(fb && o.tanggal.substr(0,7)!==fb)return false;
-return true;
-});
+  const q=searchOrder.value.toLowerCase();
+  const ft=filterTanggal.value;
+  const fb=filterBulan.value;
+
+  return orders.filter(o=>{
+    if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
+    if(ft && o.tanggal!==ft) return false;
+    if(fb && o.tanggal.substr(0,7)!==fb) return false;
+    return true;
+  });
 }
-  
+
 /* CRUD */
 function tambahOrder(){
-let m=parseRp(modal.value),j=parseRp(jual.value);
-orders.push({
-no:noPesanan.value,
-tanggal:tanggal.value,
-produk:produk.value,
-modal:m,jual:j,profit:j-m,status:status.value
-});
-localStorage.setItem("orders",JSON.stringify(orders));
-renderAll();
+  const m=parseRp(modal.value), j=parseRp(jual.value);
+  orders.push({
+    no:noPesanan.value,
+    tanggal:tanggal.value,
+    produk:produk.value,
+    modal:m,jual:j,profit:j-m,status:status.value
+  });
+  localStorage.setItem("orders",JSON.stringify(orders));
+  renderAll();
 }
 
 function editOrder(i){
-editIndex=i;
-let o=orders[i];
-eTanggal.value=o.tanggal;
-eProduk.value=o.produk;
-eModal.value=rupiah(o.modal);
-eJual.value=rupiah(o.jual);
-eStatus.value=o.status;
-modalEdit.style.display="flex";
+  editIndex=i;
+  const o=orders[i];
+  eTanggal.value=o.tanggal;
+  eProduk.value=o.produk;
+  eModal.value=rupiah(o.modal);
+  eJual.value=rupiah(o.jual);
+  eStatus.value=o.status;
+  modalEdit.style.display="flex";
 }
 
 function simpanEdit(){
-let o=orders[editIndex];
-o.tanggal=eTanggal.value;
-o.produk=eProduk.value;
-o.modal=parseRp(eModal.value);
-o.jual=parseRp(eJual.value);
-o.profit=o.jual-o.modal;
-o.status=eStatus.value;
-localStorage.setItem("orders",JSON.stringify(orders));
-modalEdit.style.display="none";
-renderAll();
+  const o=orders[editIndex];
+  o.tanggal=eTanggal.value;
+  o.produk=eProduk.value;
+  o.modal=parseRp(eModal.value);
+  o.jual=parseRp(eJual.value);
+  o.profit=o.jual-o.modal;
+  o.status=eStatus.value;
+  localStorage.setItem("orders",JSON.stringify(orders));
+  modalEdit.style.display="none";
+  renderAll();
 }
 
 function hapusOrder(i){
-if(confirm("Hapus order ini?")){
-orders.splice(i,1);
-localStorage.setItem("orders",JSON.stringify(orders));
-renderAll();
-}
+  if(confirm("Hapus order?")){
+    orders.splice(i,1);
+    localStorage.setItem("orders",JSON.stringify(orders));
+    renderAll();
+  }
 }
 
 /* RENDER */
 function renderAll(){
-renderTable();
-renderProfit();
+  renderTable();
+  renderProfit();
 }
 
 function renderTable(){
-let data=getFilteredOrders();
-tbody.innerHTML="";
-data.forEach(o=>{
-let idx=orders.indexOf(o);
-tbody.innerHTML+=`
-<tr>
-<td>${o.no}</td>
-<td>${o.tanggal}</td>
-<td>${o.produk}</td>
-<td>${role==="Staff"?"-":rupiah(o.modal)}</td>
-<td>${role==="Staff"?"-":rupiah(o.jual)}</td>
-<td>${role==="Staff"?"-":rupiah(o.profit)}</td>
-<td>
-${role==="Staff"
-? `<span class="status ${o.status}">${o.status}</span>`
-: `<select class="statusSelect ${o.status}"
-onchange="orders[${idx}].status=this.value;localStorage.setItem('orders',JSON.stringify(orders));this.className='statusSelect '+this.value;">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>`
-}
-</td>
-<td>
-${role==="Staff"?"-":
-`<button class="btn edit" onclick="editOrder(${idx})">Edit</button>
- <button class="btn hapus" onclick="hapusOrder(${idx})">Hapus</button>`}
-</td>
-</tr>`;
-});
-if(role!=="Staff"){
-tbody.querySelectorAll("select").forEach((s,i)=>s.value=data[i].status);
-}
+  const data=getFilteredOrders();
+  tbody.innerHTML="";
+  data.forEach(o=>{
+    const idx=orders.indexOf(o);
+    tbody.innerHTML+=`
+    <tr>
+      <td>${o.no}</td>
+      <td>${o.tanggal}</td>
+      <td>${o.produk}</td>
+      <td>${role==="Staff"?"-":rupiah(o.modal)}</td>
+      <td>${role==="Staff"?"-":rupiah(o.jual)}</td>
+      <td>${role==="Staff"?"-":rupiah(o.profit)}</td>
+      <td>
+        ${role==="Staff"
+          ? `<span class="status ${o.status}">${o.status}</span>`
+          : `<select class="statusSelect ${o.status}"
+               onchange="orders[${idx}].status=this.value;
+               localStorage.setItem('orders',JSON.stringify(orders));
+               this.className='statusSelect '+this.value;">
+              <option value="packing">Packing</option>
+              <option value="dikirim">Dikirim</option>
+              <option value="selesai">Selesai</option>
+              <option value="return">Return</option>
+            </select>`
+        }
+      </td>
+      <td>
+        ${role==="Staff"?"-":
+        `<button class="btn edit" onclick="editOrder(${idx})">Edit</button>
+         <button class="btn hapus" onclick="hapusOrder(${idx})">Hapus</button>`}
+      </td>
+    </tr>`;
+  });
+
+  if(role!=="Staff"){
+    tbody.querySelectorAll("select").forEach((s,i)=>s.value=data[i].status);
+  }
 }
 
 function resetFilter(){
-filterTanggal.value="";
-filterBulan.value="";
-searchOrder.value="";
-renderAll();
+  filterTanggal.value="";
+  filterBulan.value="";
+  searchOrder.value="";
+  renderAll();
 }
 
 function renderProfit(){
-let data=getFilteredOrders();
-totalOrder.innerText=data.length;
-totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
+  const data=getFilteredOrders();
+  totalOrder.innerText=data.length;
+  totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
 }
 </script>
 
 </body>
 </html>
-
