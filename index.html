@@ -15,14 +15,14 @@ body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
 .login-box{width:340px;background:#fff;padding:28px;border-radius:12px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
 .login-box h2{text-align:center}
-.login-box input,button,select{width:100%;padding:10px;margin-top:8px}
+.login-box input,select,button{width:100%;padding:10px;margin-top:8px}
 button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
 #error{text-align:center;color:#dc2626}
 
 /* LAYOUT */
 #dashboard{display:none}
 .sidebar{width:240px;height:100vh;position:fixed;background:#0f172a;color:#fff;padding:20px}
-.sidebar a{display:block;padding:10px;color:#cbd5f5;text-decoration:none;border-radius:6px;font-size:14px}
+.sidebar a{display:block;padding:10px;color:#cbd5f5;text-decoration:none;border-radius:6px}
 .sidebar a:hover{background:#1e293b;color:#fff}
 .main{margin-left:240px;padding:24px}
 
@@ -35,7 +35,7 @@ button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointe
 .btn-sm{height:28px;padding:4px 8px;font-size:12px;border-radius:5px}
 
 /* TABLE */
-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:center}
 th{background:#2563eb;color:#fff}
 
@@ -54,7 +54,7 @@ th{background:#2563eb;color:#fff}
 /* MODAL */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center}
 .modal-box{width:360px;background:#fff;padding:18px;border-radius:10px}
-.modal-box input,select{width:100%;padding:8px;margin-top:6px}
+.modal-box input,.modal-box select{width:100%;padding:8px;margin-top:6px}
 </style>
 </head>
 
@@ -76,7 +76,7 @@ th{background:#2563eb;color:#fff}
 <div class="sidebar">
   <h3 id="roleText"></h3>
   <a onclick="showPage('inputPage')">Input Order</a>
-  <a onclick="showPage('tablePage')">Data Order</a>
+  <a onclick="showPage('orderPage')">Data Order</a>
   <a onclick="showPage('profitPage')">Ringkasan Profit</a>
   <a onclick="showPage('packingPage')">Daily Packing</a>
   <a onclick="showPage('chartPage')">Grafik</a>
@@ -85,45 +85,40 @@ th{background:#2563eb;color:#fff}
 
 <div class="main">
 
-<!-- INPUT ORDER -->
+<!-- INPUT -->
 <div id="inputPage" class="card">
 <h3>Input Order</h3>
-
 <select id="toko">
-  <option value="">-- Pilih Toko --</option>
-  <option value="Toko A">Toko A</option>
-  <option value="Toko B">Toko B</option>
+<option value="">Pilih Toko</option>
+<option>Toko A</option>
+<option>Toko B</option>
 </select>
-
 <input id="noPesanan" placeholder="No Pesanan">
 <input type="date" id="tanggal">
-<input id="produk" placeholder="Nama Produk">
+<input id="produk" placeholder="Produk">
 <input id="modal" placeholder="Modal">
 <input id="jual" placeholder="Jual">
-
 <select id="status">
 <option value="packing">Packing</option>
 <option value="dikirim">Dikirim</option>
 <option value="selesai">Selesai</option>
 <option value="return">Return</option>
 </select>
-
 <button onclick="tambahOrder()">Simpan</button>
 </div>
 
 <!-- DATA ORDER -->
-<div id="tablePage" class="card hidden">
+<div id="orderPage" class="card hidden">
 <h3>Data Order</h3>
-
 <div class="filter">
-<input type="date" id="filterTanggal">
-<input type="month" id="filterBulan">
-<input id="searchOrder" placeholder="Cari No / Produk">
-<select id="filterToko">
-  <option value="">Semua Toko</option>
-  <option>Toko A</option>
-  <option>Toko B</option>
+<input type="date" id="fTanggal">
+<input type="month" id="fBulan">
+<select id="fToko">
+<option value="">Semua Toko</option>
+<option>Toko A</option>
+<option>Toko B</option>
 </select>
+<input id="fSearch" placeholder="Cari No / Produk">
 <button class="btn btn-sm" onclick="renderAll()">Filter</button>
 <button class="btn btn-sm hapus" onclick="resetFilter()">Reset</button>
 </div>
@@ -131,22 +126,20 @@ th{background:#2563eb;color:#fff}
 <table>
 <thead>
 <tr>
-<th>No Pesanan</th><th>Toko</th><th>Tanggal</th><th>Produk</th>
+<th>No</th><th>Toko</th><th>Tanggal</th><th>Produk</th>
 <th>Modal</th><th>Jual</th><th>Profit</th><th>Status</th><th>Aksi</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="orderBody"></tbody>
 </table>
 </div>
 
-<!-- RINGKASAN PROFIT -->
+<!-- PROFIT -->
 <div id="profitPage" class="card hidden">
 <h3>Ringkasan Profit Lengkap</h3>
 
 <table>
-<tr>
-<th>Total Order</th><th>Total Modal</th><th>Total Jual</th><th>Total Profit</th>
-</tr>
+<tr><th>Total Order</th><th>Total Modal</th><th>Total Jual</th><th>Total Profit</th></tr>
 <tr>
 <td id="sumOrder"></td>
 <td id="sumModal"></td>
@@ -154,19 +147,34 @@ th{background:#2563eb;color:#fff}
 <td id="sumProfit"></td>
 </tr>
 </table>
+
+<h4>Profit per Status</h4>
+<table>
+<thead><tr><th>Status</th><th>Order</th><th>Modal</th><th>Jual</th><th>Profit</th></tr></thead>
+<tbody id="byStatus"></tbody>
+</table>
+
+<h4>Profit per Bulan</h4>
+<table>
+<thead><tr><th>Bulan</th><th>Order</th><th>Modal</th><th>Jual</th><th>Profit</th></tr></thead>
+<tbody id="byMonth"></tbody>
+</table>
+
+<h4>Profit Harian</h4>
+<table>
+<thead><tr><th>Tanggal</th><th>Order</th><th>Profit</th></tr></thead>
+<tbody id="byDay"></tbody>
+</table>
 </div>
 
-<!-- DAILY PACKING -->
+<!-- PACKING -->
 <div id="packingPage" class="card hidden">
-<h3>Daily Packing (Detail)</h3>
+<h3>Daily Packing</h3>
 <table>
 <thead>
-<tr>
-<th>Tanggal</th><th>No Pesanan</th><th>Toko</th><th>Produk</th>
-<th>Jumlah</th><th>Total Jual</th>
-</tr>
+<tr><th>Tanggal</th><th>No</th><th>Toko</th><th>Produk</th><th>Jumlah</th><th>Total Jual</th></tr>
 </thead>
-<tbody id="packingTable"></tbody>
+<tbody id="packingBody"></tbody>
 </table>
 </div>
 
@@ -180,6 +188,28 @@ th{background:#2563eb;color:#fff}
 </div>
 </div>
 
+<!-- MODAL EDIT -->
+<div class="modal" id="modalEdit">
+<div class="modal-box">
+<h3>Edit Order</h3>
+<select id="eToko">
+<option>Toko A</option>
+<option>Toko B</option>
+</select>
+<input type="date" id="eTanggal">
+<input id="eProduk">
+<input id="eModal">
+<input id="eJual">
+<select id="eStatus">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>
+<button onclick="simpanEdit()">Simpan</button>
+</div>
+</div>
+
 <script>
 const users=[
 {id:"owner",password:"owner123",role:"Owner"},
@@ -188,10 +218,10 @@ const users=[
 ];
 
 let orders=JSON.parse(localStorage.getItem("orders")||"[]");
-let role="", chart1=null, chart2=null;
+let role="", editIndex=null, chart1=null, chart2=null;
 
-const rupiah=n=>"Rp "+Number(n).toLocaleString("id-ID");
-const parseRp=v=>Number(v.replace(/[^0-9]/g,""));
+const rp=n=>"Rp "+Number(n).toLocaleString("id-ID");
+const num=v=>Number(v)||0;
 
 function login(){
 for(const u of users){
@@ -207,77 +237,145 @@ error.innerText="Login gagal";
 function logout(){location.reload()}
 
 function showPage(id){
-["inputPage","tablePage","profitPage","packingPage","chartPage"]
+["inputPage","orderPage","profitPage","packingPage","chartPage"]
 .forEach(p=>document.getElementById(p).classList.add("hidden"));
 document.getElementById(id).classList.remove("hidden");
 renderAll();
 }
 
 function tambahOrder(){
-if(!toko.value){alert("Pilih toko dulu");return;}
-const m=parseRp(modal.value),j=parseRp(jual.value);
+if(!toko.value){alert("Pilih toko");return;}
+const m=num(modal.value), j=num(jual.value);
 orders.push({
 no:noPesanan.value,
 toko:toko.value,
 tanggal:tanggal.value,
 produk:produk.value,
-modal:m,jual:j,profit:j-m,status:status.value
+modal:m,
+jual:j,
+profit:j-m,
+status:status.value
 });
 localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
 }
 
-function getFilteredOrders(){
-const q=searchOrder.value.toLowerCase();
+function filtered(){
 return orders.filter(o=>{
-if(filterToko.value && o.toko!==filterToko.value) return false;
-if(filterTanggal.value && o.tanggal!==filterTanggal.value) return false;
-if(filterBulan.value && o.tanggal.substr(0,7)!==filterBulan.value) return false;
-if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
+if(fTanggal.value && o.tanggal!==fTanggal.value) return false;
+if(fBulan.value && o.tanggal.substr(0,7)!==fBulan.value) return false;
+if(fToko.value && o.toko!==fToko.value) return false;
+if(fSearch.value && !o.no.toLowerCase().includes(fSearch.value.toLowerCase()) &&
+!o.produk.toLowerCase().includes(fSearch.value.toLowerCase())) return false;
 return true;
 });
 }
 
 function renderAll(){
-renderTable();
+renderOrder();
 renderProfit();
 renderPacking();
 renderChart();
 }
 
-function renderTable(){
-tbody.innerHTML="";
-getFilteredOrders().forEach(o=>{
-tbody.innerHTML+=`
+function renderOrder(){
+orderBody.innerHTML="";
+filtered().forEach((o,i)=>{
+orderBody.innerHTML+=`
 <tr>
-<td>${o.no}</td><td>${o.toko}</td><td>${o.tanggal}</td>
-<td>${o.produk}</td><td>${rupiah(o.modal)}</td>
-<td>${rupiah(o.jual)}</td><td>${rupiah(o.profit)}</td>
+<td>${o.no}</td><td>${o.toko}</td><td>${o.tanggal}</td><td>${o.produk}</td>
+<td>${rp(o.modal)}</td><td>${rp(o.jual)}</td><td>${rp(o.profit)}</td>
 <td><span class="status ${o.status}">${o.status}</span></td>
-<td>-</td>
+<td>${role==="Staff"?"-":
+`<button class="btn edit" onclick="editOrder(${i})">Edit</button>
+<button class="btn hapus" onclick="hapusOrder(${i})">Hapus</button>`}</td>
 </tr>`;
 });
 }
 
+function editOrder(i){
+editIndex=i;
+const o=orders[i];
+eToko.value=o.toko;
+eTanggal.value=o.tanggal;
+eProduk.value=o.produk;
+eModal.value=o.modal;
+eJual.value=o.jual;
+eStatus.value=o.status;
+modalEdit.style.display="flex";
+}
+
+function simpanEdit(){
+const o=orders[editIndex];
+o.toko=eToko.value;
+o.tanggal=eTanggal.value;
+o.produk=eProduk.value;
+o.modal=num(eModal.value);
+o.jual=num(eJual.value);
+o.profit=o.jual-o.modal;
+o.status=eStatus.value;
+localStorage.setItem("orders",JSON.stringify(orders));
+modalEdit.style.display="none";
+renderAll();
+}
+
+function hapusOrder(i){
+if(confirm("Hapus order?")){
+orders.splice(i,1);
+localStorage.setItem("orders",JSON.stringify(orders));
+renderAll();
+}
+}
+
 function renderProfit(){
-const data=getFilteredOrders();
-sumOrder.innerText=data.length;
-sumModal.innerText=rupiah(data.reduce((a,b)=>a+b.modal,0));
-sumJual.innerText=rupiah(data.reduce((a,b)=>a+b.jual,0));
-sumProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
+const d=filtered();
+sumOrder.innerText=d.length;
+sumModal.innerText=rp(d.reduce((a,b)=>a+b.modal,0));
+sumJual.innerText=rp(d.reduce((a,b)=>a+b.jual,0));
+sumProfit.innerText=rp(d.reduce((a,b)=>a+b.profit,0));
+
+const s={},m={},h={};
+d.forEach(o=>{
+s[o.status]=s[o.status]||{o:0,m:0,j:0,p:0};
+s[o.status].o++;s[o.status].m+=o.modal;s[o.status].j+=o.jual;s[o.status].p+=o.profit;
+
+const mo=o.tanggal.substr(0,7);
+m[mo]=m[mo]||{o:0,m:0,j:0,p:0};
+m[mo].o++;m[mo].m+=o.modal;m[mo].j+=o.jual;m[mo].p+=o.profit;
+
+h[o.tanggal]=h[o.tanggal]||{o:0,p:0};
+h[o.tanggal].o++;h[o.tanggal].p+=o.profit;
+});
+
+byStatus.innerHTML="";
+Object.keys(s).forEach(k=>{
+byStatus.innerHTML+=`
+<tr><td><span class="status ${k}">${k}</span></td>
+<td>${s[k].o}</td><td>${rp(s[k].m)}</td>
+<td>${rp(s[k].j)}</td><td>${rp(s[k].p)}</td></tr>`;
+});
+
+byMonth.innerHTML="";
+Object.keys(m).sort().forEach(k=>{
+byMonth.innerHTML+=`
+<tr><td>${k}</td><td>${m[k].o}</td>
+<td>${rp(m[k].m)}</td><td>${rp(m[k].j)}</td><td>${rp(m[k].p)}</td></tr>`;
+});
+
+byDay.innerHTML="";
+Object.keys(h).sort().forEach(k=>{
+byDay.innerHTML+=`
+<tr><td>${k}</td><td>${h[k].o}</td><td>${rp(h[k].p)}</td></tr>`;
+});
 }
 
 function renderPacking(){
-packingTable.innerHTML="";
-getFilteredOrders().filter(o=>o.status==="packing").forEach(o=>{
-packingTable.innerHTML+=`
+packingBody.innerHTML="";
+filtered().filter(o=>o.status==="packing").forEach(o=>{
+packingBody.innerHTML+=`
 <tr>
-<td>${o.tanggal}</td>
-<td>${o.no}</td>
-<td>${o.toko}</td>
-<td>${o.produk}</td>
-<td>1</td>
-<td>${rupiah(o.jual)}</td>
+<td>${o.tanggal}</td><td>${o.no}</td><td>${o.toko}</td>
+<td>${o.produk}</td><td>1</td><td>${rp(o.jual)}</td>
 </tr>`;
 });
 }
@@ -286,9 +384,9 @@ function renderChart(){
 if(chart1)chart1.destroy();
 if(chart2)chart2.destroy();
 
-const data=getFilteredOrders();
+const d=filtered();
 const sc={packing:0,dikirim:0,selesai:0,return:0};
-data.forEach(o=>sc[o.status]++);
+d.forEach(o=>sc[o.status]++);
 
 chart1=new Chart(chartStatus,{
 type:"bar",
@@ -296,7 +394,7 @@ data:{labels:Object.keys(sc),datasets:[{label:"Order per Status",data:Object.val
 });
 
 const mp={};
-data.forEach(o=>{
+d.forEach(o=>{
 const m=o.tanggal.substr(0,7);
 mp[m]=(mp[m]||0)+o.profit;
 });
@@ -308,10 +406,10 @@ data:{labels:Object.keys(mp),datasets:[{label:"Profit per Bulan",data:Object.val
 }
 
 function resetFilter(){
-filterTanggal.value="";
-filterBulan.value="";
-searchOrder.value="";
-filterToko.value="";
+fTanggal.value="";
+fBulan.value="";
+fToko.value="";
+fSearch.value="";
 renderAll();
 }
 </script>
