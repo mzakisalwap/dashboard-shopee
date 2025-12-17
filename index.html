@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Dashboard Order</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -33,7 +32,7 @@ button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointe
 .btn-sm{height:28px;padding:4px 8px;font-size:12px;border-radius:5px}
 
 /* TABLE */
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
 th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:center}
 th{background:#2563eb;color:#fff}
 
@@ -102,7 +101,6 @@ select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12p
 <!-- DATA ORDER -->
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
-
 <div class="filter">
 <input type="date" id="filterTanggal">
 <input type="month" id="filterBulan">
@@ -123,11 +121,24 @@ select.statusSelect{padding:4px 8px;border-radius:12px;border:none;font-size:12p
 </table>
 </div>
 
-<!-- PROFIT -->
+<!-- RINGKASAN PROFIT -->
 <div id="profitPage" class="card hidden">
-<h3>Ringkasan Profit</h3>
+<h3>Ringkasan Profit Lengkap</h3>
+
 <p>Total Order: <b id="totalOrder"></b></p>
 <p>Total Profit: <b id="totalProfit"></b></p>
+
+<h4>Profit per Status</h4>
+<table>
+<thead><tr><th>Status</th><th>Total Order</th><th>Total Profit</th></tr></thead>
+<tbody id="profitStatus"></tbody>
+</table>
+
+<h4>Profit per Bulan</h4>
+<table>
+<thead><tr><th>Bulan</th><th>Total Order</th><th>Total Profit</th></tr></thead>
+<tbody id="profitPerBulan"></tbody>
+</table>
 </div>
 
 </div>
@@ -194,7 +205,6 @@ function getFilteredOrders(){
   const q=searchOrder.value.toLowerCase();
   const ft=filterTanggal.value;
   const fb=filterBulan.value;
-
   return orders.filter(o=>{
     if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
     if(ft && o.tanggal!==ft) return false;
@@ -301,10 +311,42 @@ function resetFilter(){
   renderAll();
 }
 
+/* PROFIT LENGKAP */
 function renderProfit(){
   const data=getFilteredOrders();
   totalOrder.innerText=data.length;
   totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
+
+  // per status
+  const sts=["packing","dikirim","selesai","return"];
+  profitStatus.innerHTML="";
+  sts.forEach(s=>{
+    const f=data.filter(o=>o.status===s);
+    profitStatus.innerHTML+=`
+    <tr>
+      <td><span class="status ${s}">${s}</span></td>
+      <td>${f.length}</td>
+      <td>${rupiah(f.reduce((a,b)=>a+b.profit,0))}</td>
+    </tr>`;
+  });
+
+  // per bulan
+  const map={};
+  data.forEach(o=>{
+    const b=o.tanggal.substr(0,7);
+    if(!map[b]) map[b]={order:0,profit:0};
+    map[b].order++;
+    map[b].profit+=o.profit;
+  });
+  profitPerBulan.innerHTML="";
+  Object.keys(map).sort().forEach(b=>{
+    profitPerBulan.innerHTML+=`
+    <tr>
+      <td>${b}</td>
+      <td>${map[b].order}</td>
+      <td>${rupiah(map[b].profit)}</td>
+    </tr>`;
+  });
 }
 </script>
 
