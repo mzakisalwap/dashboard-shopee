@@ -133,4 +133,134 @@ th{background:#2563eb;color:#fff}
 <thead>
 <tr>
 <th>No</th><th>Tanggal</th><th>Produk</th>
-<
+<th>Modal</th><th>Jual</th><th>Profit</th>
+<th>Status</th><th>Aksi</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<!-- CHART -->
+<div id="chartPage" class="card hidden">
+<h3>Grafik Profit</h3>
+<canvas id="profitChart"></canvas>
+</div>
+
+</div>
+</div>
+
+<script>
+var users=[
+{id:"owner",password:"owner123",role:"Owner"},
+{id:"admin",password:"admin123",role:"Admin"},
+{id:"staff",password:"staff123",role:"Staff"}
+];
+
+var orders=JSON.parse(localStorage.getItem("orders")||"[]");
+var role="", chart=null;
+
+/* FORMAT RUPIAH */
+function rupiah(n){
+  return "Rp " + n.toLocaleString("id-ID");
+}
+function parseRupiah(v){
+  return Number(v.replace(/[^0-9]/g,""));
+}
+modal.oninput=function(){ this.value=rupiah(parseRupiah(this.value)) }
+jual.oninput=function(){ this.value=rupiah(parseRupiah(this.value)) }
+
+function login(){
+for(var i=0;i<users.length;i++){
+if(users[i].id===user.value&&users[i].password===pass.value){
+role=users[i].role;
+loginPage.style.display="none";
+dashboard.style.display="block";
+roleText.innerHTML="Role: "+role;
+if(role==="Staff"){
+  document.getElementById("profitPage").style.display="none";
+  document.getElementById("menuChart").style.display="none";
+}
+renderAll(); return;
+}}
+error.innerHTML="Login gagal";
+}
+
+function logout(){location.reload()}
+
+function showPage(id){
+["inputPage","profitPage","tablePage","chartPage"].forEach(p=>{
+document.getElementById(p).classList.add("hidden");
+});
+document.getElementById(id).classList.remove("hidden");
+if(id==="chartPage") renderChart();
+}
+
+function tambahOrder(){
+var m=parseRupiah(modal.value);
+var j=parseRupiah(jual.value);
+orders.push({
+no:noPesanan.value,
+tanggal:tanggal.value,
+produk:produk.value,
+modal:m,jual:j,profit:j-m,status:status.value
+});
+localStorage.setItem("orders",JSON.stringify(orders));
+renderAll();
+}
+
+function renderAll(){
+renderTable();
+renderProfit();
+renderChart();
+}
+
+function renderTable(){
+tbody.innerHTML="";
+orders.forEach((o,i)=>{
+tbody.innerHTML+=
+`<tr>
+<td>${o.no}</td>
+<td>${o.tanggal}</td>
+<td>${o.produk}</td>
+<td>${role==="Staff"?"-":rupiah(o.modal)}</td>
+<td>${role==="Staff"?"-":rupiah(o.jual)}</td>
+<td>${role==="Staff"?"-":rupiah(o.profit)}</td>
+<td><span class="status ${o.status}">${o.status}</span></td>
+<td>${role==="Staff"?"-":`<button class="btn hapus" onclick="hapus(${i})">Hapus</button>`}</td>
+</tr>`;
+});
+}
+
+function renderProfit(){
+totalOrder.innerText=orders.length;
+totalProfit.innerText=rupiah(orders.reduce((a,b)=>a+b.profit,0));
+profitStatus.innerHTML="";
+["packing","dikirim","selesai","return"].forEach(s=>{
+let t=orders.filter(o=>o.status===s).reduce((a,b)=>a+b.profit,0);
+profitStatus.innerHTML+=`<tr><td><span class="status ${s}">${s}</span></td><td>${rupiah(t)}</td></tr>`;
+});
+}
+
+function hapus(i){
+if(confirm("Hapus order?")){
+orders.splice(i,1);
+localStorage.setItem("orders",JSON.stringify(orders));
+renderAll();
+}
+}
+
+function renderChart(){
+if(chart) chart.destroy();
+chart=new Chart(profitChart,{
+type:"bar",
+data:{
+labels:orders.map(o=>o.produk),
+datasets:[{label:"Profit",data:orders.map(o=>o.profit)}]
+}
+});
+}
+</script>
+
+</body>
+</html>
