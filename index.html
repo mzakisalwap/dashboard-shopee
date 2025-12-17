@@ -225,7 +225,8 @@ if(ft && o.tanggal!==ft)return false;
 if(fb && o.tanggal.substr(0,7)!==fb)return false;
 return true;
 });
-
+}
+  
 /* CRUD */
 function tambahOrder(){
 let m=parseRp(modal.value),j=parseRp(jual.value);
@@ -330,3 +331,4 @@ totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
 
 </body>
 </html>
+
