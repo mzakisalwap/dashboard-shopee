@@ -2,13 +2,16 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Admin Dashboard Order</title>
+<title>Dashboard Order</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
+.hidden{display:none}
+
+/* LOGIN */
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
 .login-box{width:340px;background:#fff;padding:30px;border-radius:8px;box-shadow:0 15px 30px rgba(0,0,0,.12)}
 .login-box h2{text-align:center}
@@ -16,39 +19,36 @@ body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
 button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
 #error{text-align:center;color:#dc2626}
 
+/* LAYOUT */
 #dashboard{display:none}
 .sidebar{width:240px;height:100vh;position:fixed;background:#0f172a;color:#fff;padding:20px}
-.sidebar a{display:block;padding:12px;color:#cbd5f5;text-decoration:none;border-radius:6px}
+.sidebar a{display:block;padding:12px;color:#cbd5f5;text-decoration:none;border-radius:6px;cursor:pointer}
 .sidebar a:hover{background:#1e293b;color:#fff}
 .main{margin-left:240px;padding:30px}
 .card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 8px 20px rgba(0,0,0,.05)}
-.hidden{display:none}
 
+/* TABLE */
 table{width:100%;border-collapse:collapse}
 th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center}
 th{background:#2563eb;color:#fff}
 
+/* STATUS */
 .status{padding:5px 12px;border-radius:20px;font-size:12px;color:#fff}
-select.statusSelect{padding:6px;border-radius:10px}
+select.statusSelect{padding:6px;border-radius:12px}
 .packing{background:#eab308;color:#000}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
 
+/* FILTER */
 .filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .btn{padding:6px 10px;border:none;border-radius:5px;cursor:pointer}
 .edit{background:#f59e0b}
 .hapus{background:#dc2626;color:#fff}
 
 /* MODAL */
-.modal{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,.4);display:none;
-  align-items:center;justify-content:center
-}
-.modal-box{
-  width:380px;background:#fff;padding:20px;border-radius:8px
-}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+.modal-box{width:380px;background:#fff;padding:20px;border-radius:8px}
 .modal-box input,select{width:100%;padding:10px;margin-top:10px}
 </style>
 </head>
@@ -58,8 +58,8 @@ select.statusSelect{padding:6px;border-radius:10px}
 <!-- LOGIN -->
 <div id="loginPage">
   <div class="login-box">
-    <h2>Admin Login</h2>
-    <input id="user" placeholder="ID User">
+    <h2>Login</h2>
+    <input id="user" placeholder="ID">
     <input id="pass" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
     <div id="error"></div>
@@ -100,12 +100,11 @@ select.statusSelect{padding:6px;border-radius:10px}
 <!-- DATA ORDER -->
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
-
 <div class="filter">
 <input type="date" id="filterTanggal">
 <input type="month" id="filterBulan">
-<input id="searchOrder" placeholder="Cari No Pesanan / Produk">
-<button onclick="renderTable()">Filter</button>
+<input id="searchOrder" placeholder="Cari No / Produk">
+<button onclick="renderAll()">Filter</button>
 <button onclick="resetFilter()">Reset</button>
 </div>
 
@@ -123,14 +122,18 @@ select.statusSelect{padding:6px;border-radius:10px}
 
 <!-- PROFIT -->
 <div id="profitPage" class="card hidden">
-<h3>Ringkasan Profit</h3>
+<h3>Ringkasan Profit (Aktual)</h3>
 <p>Total Order: <b id="totalOrder"></b></p>
 <p>Total Profit: <b id="totalProfit"></b></p>
+<table>
+<thead><tr><th>Status</th><th>Total Order</th><th>Total Profit</th></tr></thead>
+<tbody id="profitStatus"></tbody>
+</table>
 </div>
 
 <!-- GRAFIK PROFIT -->
 <div id="chartProfitPage" class="card hidden">
-<h3>Grafik Profit Per Bulan</h3>
+<h3>Grafik Profit Bulanan</h3>
 <canvas id="profitChart"></canvas>
 </div>
 
@@ -162,6 +165,7 @@ select.statusSelect{padding:6px;border-radius:10px}
 </div>
 
 <script>
+/* USER */
 var users=[
 {id:"owner",password:"owner123",role:"Owner"},
 {id:"admin",password:"admin123",role:"Admin"},
@@ -177,6 +181,7 @@ function parseRp(v){return Number(v.replace(/[^0-9]/g,""))}
 modal.oninput=()=>modal.value=rupiah(parseRp(modal.value))
 jual.oninput=()=>jual.value=rupiah(parseRp(jual.value))
 
+/* LOGIN */
 function login(){
 for(let u of users){
 if(u.id===user.value && u.password===pass.value){
@@ -188,18 +193,31 @@ renderAll(); return;
 }}
 error.innerText="Login gagal";
 }
-
 function logout(){location.reload()}
 
-function showPage(id){
-["inputPage","tablePage","profitPage","chartProfitPage","chartStatusPage"].forEach(p=>{
-document.getElementById(p).classList.add("hidden");
+/* FILTER DATA TERPUSAT */
+function getFilteredOrders(){
+let q=searchOrder.value.toLowerCase();
+let ft=filterTanggal.value;
+let fb=filterBulan.value;
+
+return orders.filter(o=>{
+if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
+if(ft && o.tanggal!==ft) return false;
+if(fb && o.tanggal.substr(0,7)!==fb) return false;
+return true;
 });
-document.getElementById(id).classList.remove("hidden");
-if(id==="chartProfitPage") renderProfitChart();
-if(id==="chartStatusPage") renderStatusChart();
 }
 
+/* PAGE */
+function showPage(id){
+["inputPage","tablePage","profitPage","chartProfitPage","chartStatusPage"]
+.forEach(p=>document.getElementById(p).classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+renderAll();
+}
+
+/* CRUD */
 function tambahOrder(){
 let m=parseRp(modal.value), j=parseRp(jual.value);
 orders.push({
@@ -210,63 +228,6 @@ modal:m,jual:j,profit:j-m,status:status.value
 });
 localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
-}
-
-function renderAll(){
-renderTable();
-renderProfit();
-renderProfitChart();
-renderStatusChart();
-}
-
-function renderTable(){
-let q=searchOrder.value.toLowerCase();
-let ft=filterTanggal.value;
-let fb=filterBulan.value;
-tbody.innerHTML="";
-
-orders.forEach((o,i)=>{
-if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return;
-if(ft && o.tanggal!==ft) return;
-if(fb && o.tanggal.substr(0,7)!==fb) return;
-
-let statusHTML = role==="Staff"
-? `<span class="status ${o.status}">${o.status}</span>`
-: `<select class="statusSelect ${o.status}" onchange="ubahStatus(${i},this.value)">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>`;
-
-tbody.innerHTML+=`
-<tr>
-<td>${o.no}</td>
-<td>${o.tanggal}</td>
-<td>${o.produk}</td>
-<td>${role==="Staff"?"-":rupiah(o.modal)}</td>
-<td>${role==="Staff"?"-":rupiah(o.jual)}</td>
-<td>${role==="Staff"?"-":rupiah(o.profit)}</td>
-<td>${statusHTML}</td>
-<td>${
-role==="Staff"?"-":
-`<button class="btn edit" onclick="editOrder(${i})">Edit</button>
- <button class="btn hapus" onclick="hapusOrder(${i})">Hapus</button>`
-}</td>
-</tr>`;
-});
-document.querySelectorAll(".statusSelect").forEach((s,i)=>s.value=orders[i].status);
-}
-
-function ubahStatus(i,val){
-orders[i].status=val;
-localStorage.setItem("orders",JSON.stringify(orders));
-renderAll();
-}
-
-function resetFilter(){
-filterTanggal.value=""; filterBulan.value=""; searchOrder.value="";
-renderTable();
 }
 
 function editOrder(i){
@@ -294,23 +255,85 @@ renderAll();
 }
 
 function hapusOrder(i){
-if(confirm("Hapus order ini?")){
+if(confirm("Hapus order?")){
 orders.splice(i,1);
 localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
 }
 }
 
-function renderProfit(){
-totalOrder.innerText=orders.length;
-totalProfit.innerText=rupiah(orders.reduce((a,b)=>a+b.profit,0));
+function ubahStatus(i,val){
+orders[i].status=val;
+localStorage.setItem("orders",JSON.stringify(orders));
+renderAll();
 }
 
-/* GRAFIK PROFIT BULAN */
+/* RENDER */
+function renderAll(){
+renderTable();
+renderProfit();
+renderProfitChart();
+renderStatusChart();
+}
+
+function renderTable(){
+let data=getFilteredOrders();
+tbody.innerHTML="";
+data.forEach(o=>{
+let idx=orders.indexOf(o);
+let statusHTML= role==="Staff"
+? `<span class="status ${o.status}">${o.status}</span>`
+: `<select class="statusSelect ${o.status}" onchange="ubahStatus(${idx},this.value)">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>`;
+
+tbody.innerHTML+=`
+<tr>
+<td>${o.no}</td>
+<td>${o.tanggal}</td>
+<td>${o.produk}</td>
+<td>${role==="Staff"?"-":rupiah(o.modal)}</td>
+<td>${role==="Staff"?"-":rupiah(o.jual)}</td>
+<td>${role==="Staff"?"-":rupiah(o.profit)}</td>
+<td>${statusHTML}</td>
+<td>${role==="Staff"?"-":
+`<button class="btn edit" onclick="editOrder(${idx})">Edit</button>
+ <button class="btn hapus" onclick="hapusOrder(${idx})">Hapus</button>`}</td>
+</tr>`;
+});
+document.querySelectorAll(".statusSelect").forEach((s,i)=>s.value=data[i].status);
+}
+
+function resetFilter(){
+filterTanggal.value=""; filterBulan.value=""; searchOrder.value="";
+renderAll();
+}
+
+function renderProfit(){
+let data=getFilteredOrders();
+totalOrder.innerText=data.length;
+totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
+let sts=["packing","dikirim","selesai","return"];
+profitStatus.innerHTML="";
+sts.forEach(s=>{
+let f=data.filter(o=>o.status===s);
+profitStatus.innerHTML+=`
+<tr>
+<td><span class="status ${s}">${s}</span></td>
+<td>${f.length}</td>
+<td>${rupiah(f.reduce((a,b)=>a+b.profit,0))}</td>
+</tr>`;
+});
+}
+
 function renderProfitChart(){
+let data=getFilteredOrders();
 if(chartProfit) chartProfit.destroy();
 let map={};
-orders.forEach(o=>{
+data.forEach(o=>{
 let b=o.tanggal.substr(0,7);
 map[b]=(map[b]||0)+o.profit;
 });
@@ -320,17 +343,14 @@ data:{labels:Object.keys(map),datasets:[{label:"Profit",data:Object.values(map)}
 });
 }
 
-/* GRAFIK ORDER PER STATUS */
 function renderStatusChart(){
+let data=getFilteredOrders();
 if(chartStatus) chartStatus.destroy();
-let statusCount={packing:0,dikirim:0,selesai:0,return:0};
-orders.forEach(o=>statusCount[o.status]++);
+let c={packing:0,dikirim:0,selesai:0,return:0};
+data.forEach(o=>c[o.status]++);
 chartStatus=new Chart(statusChart,{
 type:"bar",
-data:{
-labels:Object.keys(statusCount),
-datasets:[{label:"Total Order",data:Object.values(statusCount)}]
-}
+data:{labels:Object.keys(c),datasets:[{label:"Total Order",data:Object.values(c)}]}
 });
 }
 </script>
