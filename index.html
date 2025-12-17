@@ -2,69 +2,74 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Order</title>
+<title>Admin Dashboard Order</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#f4f6fb}
+body{margin:0;font-family:Segoe UI,Arial;background:#f1f5f9}
 
 /* LOGIN */
 #loginPage{height:100vh;display:flex;align-items:center;justify-content:center}
 .login-box{
-  width:340px;background:#fff;padding:25px;
-  box-shadow:0 10px 25px rgba(0,0,0,.1)
+  width:340px;background:#fff;padding:30px;
+  border-radius:8px;box-shadow:0 15px 30px rgba(0,0,0,.12)
 }
-.login-box h3{text-align:center}
-.login-box input,button,select{
-  width:100%;padding:10px;margin-top:10px
+.login-box h2{text-align:center;margin-bottom:10px}
+.login-box input,button{
+  width:100%;padding:12px;margin-top:10px
 }
-button{background:#4f46e5;color:#fff;border:none;cursor:pointer}
-#error{text-align:center;color:red;margin-top:10px}
+button{background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer}
+#error{text-align:center;color:#dc2626;margin-top:10px}
 
 /* DASHBOARD */
 #dashboard{display:none}
 .sidebar{
-  width:230px;height:100vh;position:fixed;
-  background:#1e293b;color:#fff;padding:20px
+  width:240px;height:100vh;position:fixed;
+  background:#0f172a;color:#fff;padding:20px
 }
-.sidebar h3{margin-bottom:20px}
+.sidebar h3{margin:0 0 20px 0}
 .sidebar a{
-  display:block;color:#fff;padding:10px;
-  text-decoration:none;border-radius:5px;cursor:pointer
+  display:block;padding:12px;margin-bottom:5px;
+  color:#cbd5f5;text-decoration:none;border-radius:6px;cursor:pointer
 }
-.sidebar a:hover{background:#334155}
+.sidebar a:hover{background:#1e293b;color:#fff}
 
-.main{margin-left:230px;padding:25px}
+.main{margin-left:240px;padding:30px}
 .card{
-  background:#fff;padding:20px;
-  border-radius:6px;margin-bottom:20px
+  background:#fff;padding:20px;border-radius:10px;
+  margin-bottom:20px;box-shadow:0 8px 20px rgba(0,0,0,.05)
 }
 .hidden{display:none}
 
 /* TABLE */
 table{width:100%;border-collapse:collapse}
-th,td{
-  border:1px solid #ddd;padding:10px;text-align:center
-}
-th{background:#4f46e5;color:#fff}
+th,td{padding:12px;border-bottom:1px solid #e5e7eb;text-align:center}
+th{background:#2563eb;color:#fff}
 
 /* STATUS */
-.status{
-  padding:4px 10px;border-radius:12px;
-  color:#fff;font-size:12px;font-weight:bold
-}
-.packing{background:#facc15;color:#000}
+.status{padding:5px 12px;border-radius:20px;font-size:12px;color:#fff}
+.packing{background:#eab308;color:#000}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
 
-/* FILTER */
-.filter{display:flex;gap:10px;margin-bottom:10px}
+/* BUTTON */
+.btn{padding:6px 10px;border:none;border-radius:5px;cursor:pointer}
+.edit{background:#f59e0b;color:#000}
+.hapus{background:#dc2626;color:#fff}
 
-/* FINANCE COLUMN */
-.colFinance{}
+/* MODAL */
+.modal{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.5);display:none;
+  align-items:center;justify-content:center
+}
+.modal-box{
+  width:400px;background:#fff;padding:20px;border-radius:8px
+}
+.modal-box input,select{width:100%;padding:10px;margin-top:10px}
 </style>
 </head>
 
@@ -73,7 +78,7 @@ th{background:#4f46e5;color:#fff}
 <!-- LOGIN -->
 <div id="loginPage">
   <div class="login-box">
-    <h3>Login</h3>
+    <h2>Admin Login</h2>
     <input id="user" placeholder="ID User">
     <input id="pass" type="password" placeholder="Password">
     <button onclick="login()">Login</button>
@@ -84,71 +89,75 @@ th{background:#4f46e5;color:#fff}
 <!-- DASHBOARD -->
 <div id="dashboard">
 
-  <div class="sidebar">
-    <h3 id="roleText"></h3>
-    <a onclick="showPage('pageInput')">Input Order</a>
-    <a onclick="showPage('pageTable')">Data Order</a>
-    <a onclick="showPage('pageChart')" id="menuChart">Grafik</a>
-    <a onclick="logout()">Logout</a>
-  </div>
+<div class="sidebar">
+  <h3 id="roleText"></h3>
+  <a onclick="showPage('inputPage')">Input Order</a>
+  <a onclick="showPage('tablePage')">Data Order</a>
+  <a onclick="showPage('chartPage')" id="menuChart">Grafik</a>
+  <a onclick="logout()">Logout</a>
+</div>
 
-  <div class="main">
+<div class="main">
 
-    <!-- INPUT -->
-    <div id="pageInput" class="card">
-      <h3>Input Order</h3>
-      <input id="noPesanan" placeholder="No Pesanan">
-      <input type="date" id="tanggal">
-      <input id="produk" placeholder="Nama Produk">
-      <input type="number" id="modal" placeholder="Harga Modal">
-      <input type="number" id="jual" placeholder="Harga Jual">
-      <select id="status">
-        <option value="packing">Packing</option>
-        <option value="dikirim">Dikirim</option>
-        <option value="selesai">Selesai</option>
-        <option value="return">Return</option>
-      </select>
-      <button onclick="tambahOrder()">Simpan Order</button>
-    </div>
+<!-- INPUT -->
+<div id="inputPage" class="card">
+<h3>Input Order</h3>
+<input id="noPesanan" placeholder="No Pesanan">
+<input type="date" id="tanggal">
+<input id="produk" placeholder="Nama Produk">
+<input type="number" id="modal" placeholder="Modal">
+<input type="number" id="jual" placeholder="Jual">
+<select id="status">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>
+<button onclick="tambahOrder()">Simpan</button>
+</div>
 
-    <!-- TABLE -->
-    <div id="pageTable" class="card hidden">
-      <h3>Data Order</h3>
+<!-- TABLE -->
+<div id="tablePage" class="card hidden">
+<h3>Data Order</h3>
+<table>
+<thead>
+<tr>
+<th>No</th><th>Tanggal</th><th>Produk</th>
+<th>Modal</th><th>Jual</th><th>Profit</th>
+<th>Status</th><th>Aksi</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
 
-      <div class="filter">
-        <input type="date" id="filterTanggal">
-        <input type="month" id="filterBulan">
-        <button onclick="renderTable()">Filter</button>
-        <button onclick="resetFilter()">Reset</button>
-      </div>
+<!-- CHART -->
+<div id="chartPage" class="card hidden">
+<h3>Grafik Profit</h3>
+<canvas id="profitChart"></canvas>
+</div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>No Pesanan</th>
-            <th>Tanggal</th>
-            <th>Produk</th>
-            <th class="colFinance">Modal</th>
-            <th class="colFinance">Jual</th>
-            <th class="colFinance">Profit</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+</div>
+</div>
 
-    <!-- CHART -->
-    <div id="pageChart" class="card hidden">
-      <h3>Grafik Profit</h3>
-      <canvas id="profitChart"></canvas>
-    </div>
-
-  </div>
+<!-- MODAL EDIT -->
+<div class="modal" id="modalEdit">
+<div class="modal-box">
+<h3>Edit Order</h3>
+<input id="eProduk">
+<input id="eModal" type="number">
+<input id="eJual" type="number">
+<select id="eStatus">
+<option value="packing">Packing</option>
+<option value="dikirim">Dikirim</option>
+<option value="selesai">Selesai</option>
+<option value="return">Return</option>
+</select>
+<button onclick="simpanEdit()">Simpan</button>
+</div>
 </div>
 
 <script>
-/* USERS */
 var users=[
 {id:"owner",password:"owner123",role:"Owner"},
 {id:"admin",password:"admin123",role:"Admin"},
@@ -156,134 +165,104 @@ var users=[
 ];
 
 var orders=JSON.parse(localStorage.getItem("orders")||"[]");
-var currentRole="";
-var chart=null;
+var role="", editIndex=-1, chart=null;
 
-/* LOGIN */
 function login(){
-  for(var i=0;i<users.length;i++){
-    if(users[i].id===user.value.trim() &&
-       users[i].password===pass.value.trim()){
-      currentRole=users[i].role;
-      loginPage.style.display="none";
-      dashboard.style.display="block";
-      roleText.innerHTML="Role: "+currentRole;
-
-      if(currentRole==="Staff"){
-        menuChart.style.display="none";
-        var cols=document.getElementsByClassName("colFinance");
-        for(var j=0;j<cols.length;j++) cols[j].style.display="none";
-      }
-      showPage("pageTable");
-      renderTable();
-      return;
-    }
-  }
-  error.innerHTML="ID atau Password salah";
+for(var i=0;i<users.length;i++){
+if(users[i].id===user.value&&users[i].password===pass.value){
+role=users[i].role;
+loginPage.style.display="none";
+dashboard.style.display="block";
+roleText.innerHTML="Role: "+role;
+if(role==="Staff") menuChart.style.display="none";
+renderTable(); return;
+}}
+error.innerHTML="Login gagal";
 }
 
-/* LOGOUT */
-function logout(){
-  location.reload();
-}
+function logout(){location.reload()}
 
-/* MENU */
 function showPage(id){
-  pageInput.classList.add("hidden");
-  pageTable.classList.add("hidden");
-  pageChart.classList.add("hidden");
-  document.getElementById(id).classList.remove("hidden");
-  if(id==="pageChart") renderChart();
+inputPage.classList.add("hidden");
+tablePage.classList.add("hidden");
+chartPage.classList.add("hidden");
+document.getElementById(id).classList.remove("hidden");
+if(id==="chartPage") renderChart();
 }
 
-/* TAMBAH ORDER */
 function tambahOrder(){
-  orders.push({
-    no:noPesanan.value,
-    tanggal:tanggal.value,
-    produk:produk.value,
-    modal:Number(modal.value),
-    jual:Number(jual.value),
-    profit:Number(jual.value)-Number(modal.value),
-    status:status.value
-  });
-  localStorage.setItem("orders",JSON.stringify(orders));
-  alert("Order tersimpan");
-  showPage("pageTable");
-  renderTable();
+orders.push({
+no:noPesanan.value,
+tanggal:tanggal.value,
+produk:produk.value,
+modal:+modal.value,
+jual:+jual.value,
+profit:+jual.value-+modal.value,
+status:status.value
+});
+localStorage.setItem("orders",JSON.stringify(orders));
+renderTable();
 }
 
-/* RENDER TABLE + EDIT STATUS */
 function renderTable(){
-  tbody.innerHTML="";
-  for(var i=0;i<orders.length;i++){
-    var o=orders[i];
-
-    if(filterTanggal.value && o.tanggal!==filterTanggal.value) continue;
-    if(filterBulan.value && o.tanggal.substr(0,7)!==filterBulan.value) continue;
-
-    var statusHTML="";
-    if(currentRole!=="Staff"){
-      statusHTML=
-      "<select onchange='updateStatus("+i+",this.value)' class='"+o.status+"'>"+
-      "<option value='packing'>Packing</option>"+
-      "<option value='dikirim'>Dikirim</option>"+
-      "<option value='selesai'>Selesai</option>"+
-      "<option value='return'>Return</option>"+
-      "</select>";
-    }else{
-      statusHTML="<span class='status "+o.status+"'>"+o.status+"</span>";
-    }
-
-    tbody.innerHTML+=
-      "<tr>"+
-      "<td>"+o.no+"</td>"+
-      "<td>"+o.tanggal+"</td>"+
-      "<td>"+o.produk+"</td>"+
-      "<td class='colFinance'>"+o.modal+"</td>"+
-      "<td class='colFinance'>"+o.jual+"</td>"+
-      "<td class='colFinance'>"+o.profit+"</td>"+
-      "<td>"+statusHTML+"</td>"+
-      "</tr>";
-  }
-
-  if(currentRole!=="Staff"){
-    var selects=tbody.querySelectorAll("select");
-    for(var k=0;k<selects.length;k++){
-      selects[k].value=orders[k].status;
-    }
-  }
+tbody.innerHTML="";
+for(var i=0;i<orders.length;i++){
+var o=orders[i];
+tbody.innerHTML+=
+"<tr>"+
+"<td>"+o.no+"</td>"+
+"<td>"+o.tanggal+"</td>"+
+"<td>"+o.produk+"</td>"+
+"<td>"+(role==="Staff"?"-":o.modal)+"</td>"+
+"<td>"+(role==="Staff"?"-":o.jual)+"</td>"+
+"<td>"+(role==="Staff"?"-":o.profit)+"</td>"+
+"<td><span class='status "+o.status+"'>"+o.status+"</span></td>"+
+"<td>"+(role==="Staff"?"-":
+"<button class='btn edit' onclick='editOrder("+i+")'>Edit</button> "+
+"<button class='btn hapus' onclick='hapusOrder("+i+")'>Hapus</button>")+
+"</td></tr>";
+}
 }
 
-/* UPDATE STATUS */
-function updateStatus(i,val){
-  orders[i].status=val;
-  localStorage.setItem("orders",JSON.stringify(orders));
-  renderTable();
+function editOrder(i){
+editIndex=i;
+var o=orders[i];
+eProduk.value=o.produk;
+eModal.value=o.modal;
+eJual.value=o.jual;
+eStatus.value=o.status;
+modalEdit.style.display="flex";
 }
 
-/* RESET FILTER */
-function resetFilter(){
-  filterTanggal.value="";
-  filterBulan.value="";
-  renderTable();
+function simpanEdit(){
+var o=orders[editIndex];
+o.produk=eProduk.value;
+o.modal=+eModal.value;
+o.jual=+eJual.value;
+o.profit=o.jual-o.modal;
+o.status=eStatus.value;
+localStorage.setItem("orders",JSON.stringify(orders));
+modalEdit.style.display="none";
+renderTable();
 }
 
-/* GRAFIK */
+function hapusOrder(i){
+if(confirm("Hapus order ini?")){
+orders.splice(i,1);
+localStorage.setItem("orders",JSON.stringify(orders));
+renderTable();
+}
+}
+
 function renderChart(){
-  if(chart) chart.destroy();
-  var labels=[], data=[];
-  for(var i=0;i<orders.length;i++){
-    labels.push(orders[i].produk);
-    data.push(orders[i].profit);
-  }
-  chart=new Chart(profitChart,{
-    type:"bar",
-    data:{
-      labels:labels,
-      datasets:[{label:"Profit",data:data}]
-    }
-  });
+if(chart) chart.destroy();
+chart=new Chart(profitChart,{
+type:"bar",
+data:{
+labels:orders.map(o=>o.produk),
+datasets:[{label:"Profit",data:orders.map(o=>o.profit)}]
+}
+});
 }
 </script>
 
