@@ -60,16 +60,8 @@ th{background:#2563eb;color:#fff}
 .edit{background:#f59e0b;color:#000}
 .hapus{background:#dc2626;color:#fff}
 
-/* MODAL */
-.modal{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,.5);display:none;
-  align-items:center;justify-content:center
-}
-.modal-box{
-  width:400px;background:#fff;padding:20px;border-radius:8px
-}
-.modal-box input,select{width:100%;padding:10px;margin-top:10px}
+/* PROFIT TABLE */
+.profit-table td{font-weight:bold}
 </style>
 </head>
 
@@ -92,6 +84,7 @@ th{background:#2563eb;color:#fff}
 <div class="sidebar">
   <h3 id="roleText"></h3>
   <a onclick="showPage('inputPage')">Input Order</a>
+  <a onclick="showPage('profitPage')">Table Profit</a>
   <a onclick="showPage('tablePage')">Data Order</a>
   <a onclick="showPage('chartPage')" id="menuChart">Grafik</a>
   <a onclick="logout()">Logout</a>
@@ -105,8 +98,8 @@ th{background:#2563eb;color:#fff}
 <input id="noPesanan" placeholder="No Pesanan">
 <input type="date" id="tanggal">
 <input id="produk" placeholder="Nama Produk">
-<input type="number" id="modal" placeholder="Modal">
-<input type="number" id="jual" placeholder="Jual">
+<input id="modal" placeholder="Modal (Rp)">
+<input id="jual" placeholder="Jual (Rp)">
 <select id="status">
 <option value="packing">Packing</option>
 <option value="dikirim">Dikirim</option>
@@ -116,155 +109,28 @@ th{background:#2563eb;color:#fff}
 <button onclick="tambahOrder()">Simpan</button>
 </div>
 
-<!-- TABLE -->
+<!-- PROFIT TABLE -->
+<div id="profitPage" class="card hidden">
+<h3>Ringkasan Profit</h3>
+<table class="profit-table">
+<tr><th>Total Order</th><th>Total Profit</th></tr>
+<tr>
+<td id="totalOrder">0</td>
+<td id="totalProfit">Rp 0</td>
+</tr>
+</table>
+<br>
+<table class="profit-table">
+<tr><th>Status</th><th>Total Profit</th></tr>
+<tbody id="profitStatus"></tbody>
+</table>
+</div>
+
+<!-- DATA ORDER -->
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
 <table>
 <thead>
 <tr>
 <th>No</th><th>Tanggal</th><th>Produk</th>
-<th>Modal</th><th>Jual</th><th>Profit</th>
-<th>Status</th><th>Aksi</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
-</div>
-
-<!-- CHART -->
-<div id="chartPage" class="card hidden">
-<h3>Grafik Profit</h3>
-<canvas id="profitChart"></canvas>
-</div>
-
-</div>
-</div>
-
-<!-- MODAL EDIT -->
-<div class="modal" id="modalEdit">
-<div class="modal-box">
-<h3>Edit Order</h3>
-<input id="eProduk">
-<input id="eModal" type="number">
-<input id="eJual" type="number">
-<select id="eStatus">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>
-<button onclick="simpanEdit()">Simpan</button>
-</div>
-</div>
-
-<script>
-var users=[
-{id:"owner",password:"owner123",role:"Owner"},
-{id:"admin",password:"admin123",role:"Admin"},
-{id:"staff",password:"staff123",role:"Staff"}
-];
-
-var orders=JSON.parse(localStorage.getItem("orders")||"[]");
-var role="", editIndex=-1, chart=null;
-
-function login(){
-for(var i=0;i<users.length;i++){
-if(users[i].id===user.value&&users[i].password===pass.value){
-role=users[i].role;
-loginPage.style.display="none";
-dashboard.style.display="block";
-roleText.innerHTML="Role: "+role;
-if(role==="Staff") menuChart.style.display="none";
-renderTable(); return;
-}}
-error.innerHTML="Login gagal";
-}
-
-function logout(){location.reload()}
-
-function showPage(id){
-inputPage.classList.add("hidden");
-tablePage.classList.add("hidden");
-chartPage.classList.add("hidden");
-document.getElementById(id).classList.remove("hidden");
-if(id==="chartPage") renderChart();
-}
-
-function tambahOrder(){
-orders.push({
-no:noPesanan.value,
-tanggal:tanggal.value,
-produk:produk.value,
-modal:+modal.value,
-jual:+jual.value,
-profit:+jual.value-+modal.value,
-status:status.value
-});
-localStorage.setItem("orders",JSON.stringify(orders));
-renderTable();
-}
-
-function renderTable(){
-tbody.innerHTML="";
-for(var i=0;i<orders.length;i++){
-var o=orders[i];
-tbody.innerHTML+=
-"<tr>"+
-"<td>"+o.no+"</td>"+
-"<td>"+o.tanggal+"</td>"+
-"<td>"+o.produk+"</td>"+
-"<td>"+(role==="Staff"?"-":o.modal)+"</td>"+
-"<td>"+(role==="Staff"?"-":o.jual)+"</td>"+
-"<td>"+(role==="Staff"?"-":o.profit)+"</td>"+
-"<td><span class='status "+o.status+"'>"+o.status+"</span></td>"+
-"<td>"+(role==="Staff"?"-":
-"<button class='btn edit' onclick='editOrder("+i+")'>Edit</button> "+
-"<button class='btn hapus' onclick='hapusOrder("+i+")'>Hapus</button>")+
-"</td></tr>";
-}
-}
-
-function editOrder(i){
-editIndex=i;
-var o=orders[i];
-eProduk.value=o.produk;
-eModal.value=o.modal;
-eJual.value=o.jual;
-eStatus.value=o.status;
-modalEdit.style.display="flex";
-}
-
-function simpanEdit(){
-var o=orders[editIndex];
-o.produk=eProduk.value;
-o.modal=+eModal.value;
-o.jual=+eJual.value;
-o.profit=o.jual-o.modal;
-o.status=eStatus.value;
-localStorage.setItem("orders",JSON.stringify(orders));
-modalEdit.style.display="none";
-renderTable();
-}
-
-function hapusOrder(i){
-if(confirm("Hapus order ini?")){
-orders.splice(i,1);
-localStorage.setItem("orders",JSON.stringify(orders));
-renderTable();
-}
-}
-
-function renderChart(){
-if(chart) chart.destroy();
-chart=new Chart(profitChart,{
-type:"bar",
-data:{
-labels:orders.map(o=>o.produk),
-datasets:[{label:"Profit",data:orders.map(o=>o.profit)}]
-}
-});
-}
-</script>
-
-</body>
-</html>
+<
