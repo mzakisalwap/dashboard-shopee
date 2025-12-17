@@ -34,33 +34,21 @@ th{background:#2563eb;color:#fff}
 
 /* STATUS */
 .status{padding:5px 12px;border-radius:20px;font-size:12px;color:#fff}
-select.statusSelect{padding:6px;border-radius:12px}
+select.statusSelect{padding:6px 10px;border-radius:12px;border:none;color:#fff}
 .packing{background:#eab308;color:#000}
 .dikirim{background:#3b82f6}
 .selesai{background:#22c55e}
 .return{background:#ef4444}
 
 /* FILTER */
-.filter-toggle{margin-bottom:10px}
-.filter-box{background:#f8fafc;padding:10px;border-radius:8px;margin-bottom:10px}
-.filter{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .filter input{height:30px;font-size:12px;padding:4px 6px}
 .btn-sm{padding:4px 8px;font-size:12px;border-radius:4px;height:30px}
-
-/* BADGE */
-.badges{margin-bottom:10px}
-.badge{display:inline-block;background:#e5e7eb;padding:4px 8px;border-radius:12px;font-size:12px;margin-right:5px}
-.badge span{font-weight:bold}
 
 /* BUTTON */
 .btn{padding:6px 10px;border:none;border-radius:5px;cursor:pointer}
 .edit{background:#f59e0b}
 .hapus{background:#dc2626;color:#fff}
-
-/* MODAL */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
-.modal-box{width:380px;background:#fff;padding:20px;border-radius:8px}
-.modal-box input,select{width:100%;padding:10px;margin-top:10px}
 </style>
 </head>
 
@@ -84,7 +72,6 @@ select.statusSelect{padding:6px;border-radius:12px}
   <a onclick="showPage('inputPage')">Input Order</a>
   <a onclick="showPage('tablePage')">Data Order</a>
   <a onclick="showPage('profitPage')">Ringkasan Profit</a>
-  <a onclick="showPage('chartProfitPage')">Grafik Profit Bulanan</a>
   <a onclick="showPage('chartStatusPage')">Grafik Order per Status</a>
   <a onclick="logout()">Logout</a>
 </div>
@@ -112,69 +99,31 @@ select.statusSelect{padding:6px;border-radius:12px}
 <div id="tablePage" class="card hidden">
 <h3>Data Order</h3>
 
-<div class="filter-toggle">
-  <button class="btn btn-sm" onclick="toggleFilter()">Filter</button>
+<div class="filter">
+<input type="date" id="filterTanggal">
+<input type="month" id="filterBulan">
+<input id="searchOrder" placeholder="Cari No / Produk">
+<button class="btn btn-sm" onclick="renderAll()">Filter</button>
+<button class="btn btn-sm hapus" onclick="resetFilter()">Reset</button>
 </div>
-
-<div id="filterBox" class="filter-box hidden">
-  <div class="filter">
-    <input type="date" id="filterTanggal">
-    <input type="month" id="filterBulan">
-    <input id="searchOrder" placeholder="Cari No / Produk">
-    <button class="btn btn-sm" onclick="renderAll()">Terapkan</button>
-    <button class="btn btn-sm hapus" onclick="resetFilter()">Reset</button>
-  </div>
-</div>
-
-<div class="badges" id="filterBadges"></div>
 
 <table>
 <thead>
 <tr>
 <th>No</th><th>Tanggal</th><th>Produk</th>
 <th>Modal</th><th>Jual</th><th>Profit</th>
-<th>Status</th><th>Aksi</th>
+<th>Status</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
 
-<!-- RINGKASAN PROFIT -->
+<!-- PROFIT -->
 <div id="profitPage" class="card hidden">
-<h3>Ringkasan Profit (Aktual)</h3>
-
-<p><b>Periode Aktif:</b> <span id="periodeText">Semua Data</span></p>
-
-<table>
-<tr><th>Total Order</th><th>Total Profit</th></tr>
-<tr>
-<td id="totalOrder"></td>
-<td id="totalProfit"></td>
-</tr>
-</table>
-
-<br>
-
-<h4>Ringkasan per Status</h4>
-<table>
-<thead><tr><th>Status</th><th>Total Order</th><th>Total Profit</th></tr></thead>
-<tbody id="profitStatus"></tbody>
-</table>
-
-<br>
-
-<h4>Ringkasan per Bulan</h4>
-<table>
-<thead><tr><th>Bulan</th><th>Total Order</th><th>Total Profit</th></tr></thead>
-<tbody id="profitPerBulan"></tbody>
-</table>
-</div>
-
-<!-- GRAFIK PROFIT -->
-<div id="chartProfitPage" class="card hidden">
-<h3>Grafik Profit Bulanan</h3>
-<canvas id="profitChart"></canvas>
+<h3>Ringkasan Profit</h3>
+<p>Total Order: <b id="totalOrder"></b></p>
+<p>Total Profit: <b id="totalProfit"></b></p>
 </div>
 
 <!-- GRAFIK STATUS -->
@@ -195,7 +144,7 @@ var users=[
 ];
 
 var orders=JSON.parse(localStorage.getItem("orders")||"[]");
-var role="", editIndex=null, chartProfit=null, chartStatus=null;
+var role="", chartStatus=null;
 
 /* RUPIAH */
 function rupiah(n){return "Rp "+Number(n).toLocaleString("id-ID")}
@@ -217,38 +166,26 @@ error.innerText="Login gagal";
 }
 function logout(){location.reload()}
 
-/* FILTER */
-function toggleFilter(){
-document.getElementById("filterBox").classList.toggle("hidden");
-}
-function updateBadges(){
-let html="";
-if(filterTanggal.value) html+=`<span class="badge">Tanggal: <span>${filterTanggal.value}</span></span>`;
-if(filterBulan.value) html+=`<span class="badge">Bulan: <span>${filterBulan.value}</span></span>`;
-if(searchOrder.value) html+=`<span class="badge">Cari: <span>${searchOrder.value}</span></span>`;
-filterBadges.innerHTML=html;
+/* PAGE */
+function showPage(id){
+["inputPage","tablePage","profitPage","chartStatusPage"]
+.forEach(p=>document.getElementById(p).classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+renderAll();
 }
 
-/* FILTERED DATA */
+/* FILTER DATA */
 function getFilteredOrders(){
 let q=searchOrder.value.toLowerCase();
 let ft=filterTanggal.value;
 let fb=filterBulan.value;
-updateBadges();
+
 return orders.filter(o=>{
 if(q && !o.no.toLowerCase().includes(q) && !o.produk.toLowerCase().includes(q)) return false;
 if(ft && o.tanggal!==ft) return false;
 if(fb && o.tanggal.substr(0,7)!==fb) return false;
 return true;
 });
-}
-
-/* PAGE */
-function showPage(id){
-["inputPage","tablePage","profitPage","chartProfitPage","chartStatusPage"]
-.forEach(p=>document.getElementById(p).classList.add("hidden"));
-document.getElementById(id).classList.remove("hidden");
-renderAll();
 }
 
 /* CRUD */
@@ -264,28 +201,43 @@ localStorage.setItem("orders",JSON.stringify(orders));
 renderAll();
 }
 
-/* RENDER ALL */
-function renderAll(){
-renderTable();
+/* STATUS FIXED */
+function ubahStatus(index, selectEl){
+let val = selectEl.value;
+orders[index].status = val;
+localStorage.setItem("orders",JSON.stringify(orders));
+
+/* update warna TANPA re-render */
+selectEl.className = "statusSelect " + val;
+
+/* update ringkasan & grafik */
 renderProfit();
-renderProfitChart();
 renderStatusChart();
 }
 
-/* TABLE */
+/* RENDER */
+function renderAll(){
+renderTable();
+renderProfit();
+renderStatusChart();
+}
+
 function renderTable(){
 let data=getFilteredOrders();
 tbody.innerHTML="";
+
 data.forEach(o=>{
 let idx=orders.indexOf(o);
-let statusHTML= role==="Staff"
+
+let statusHTML = role==="Staff"
 ? `<span class="status ${o.status}">${o.status}</span>`
-: `<select class="statusSelect ${o.status}" onchange="ubahStatus(${idx},this.value)">
-<option value="packing">Packing</option>
-<option value="dikirim">Dikirim</option>
-<option value="selesai">Selesai</option>
-<option value="return">Return</option>
-</select>`;
+: `<select class="statusSelect ${o.status}" onchange="ubahStatus(${idx},this)">
+    <option value="packing">Packing</option>
+    <option value="dikirim">Dikirim</option>
+    <option value="selesai">Selesai</option>
+    <option value="return">Return</option>
+   </select>`;
+
 tbody.innerHTML+=`
 <tr>
 <td>${o.no}</td>
@@ -295,68 +247,30 @@ tbody.innerHTML+=`
 <td>${role==="Staff"?"-":rupiah(o.jual)}</td>
 <td>${role==="Staff"?"-":rupiah(o.profit)}</td>
 <td>${statusHTML}</td>
-<td>${role==="Staff"?"-":""}</td>
 </tr>`;
 });
+
+/* set value select dengan benar */
+if(role!=="Staff"){
+tbody.querySelectorAll("select").forEach((s,i)=>{
+s.value=data[i].status;
+});
+}
 }
 
-/* PROFIT SUMMARY (DENGAN BULAN) */
+function resetFilter(){
+filterTanggal.value="";
+filterBulan.value="";
+searchOrder.value="";
+renderAll();
+}
+
 function renderProfit(){
 let data=getFilteredOrders();
 totalOrder.innerText=data.length;
 totalProfit.innerText=rupiah(data.reduce((a,b)=>a+b.profit,0));
-
-/* Periode Text */
-let periode="Semua Data";
-if(filterTanggal.value) periode="Tanggal "+filterTanggal.value;
-else if(filterBulan.value) periode="Bulan "+filterBulan.value;
-document.getElementById("periodeText").innerText=periode;
-
-/* Per Status */
-let sts=["packing","dikirim","selesai","return"];
-profitStatus.innerHTML="";
-sts.forEach(s=>{
-let f=data.filter(o=>o.status===s);
-profitStatus.innerHTML+=`
-<tr>
-<td><span class="status ${s}">${s}</span></td>
-<td>${f.length}</td>
-<td>${rupiah(f.reduce((a,b)=>a+b.profit,0))}</td>
-</tr>`;
-});
-
-/* Per Bulan */
-let map={};
-data.forEach(o=>{
-let b=o.tanggal.substr(0,7);
-if(!map[b]) map[b]={order:0,profit:0};
-map[b].order++; map[b].profit+=o.profit;
-});
-profitPerBulan.innerHTML="";
-Object.keys(map).sort().forEach(b=>{
-profitPerBulan.innerHTML+=`
-<tr>
-<td>${b}</td>
-<td>${map[b].order}</td>
-<td>${rupiah(map[b].profit)}</td>
-</tr>`;
-});
 }
 
-/* CHARTS */
-function renderProfitChart(){
-let data=getFilteredOrders();
-if(chartProfit) chartProfit.destroy();
-let map={};
-data.forEach(o=>{
-let b=o.tanggal.substr(0,7);
-map[b]=(map[b]||0)+o.profit;
-});
-chartProfit=new Chart(profitChart,{
-type:"bar",
-data:{labels:Object.keys(map),datasets:[{label:"Profit",data:Object.values(map)}]}
-});
-}
 function renderStatusChart(){
 let data=getFilteredOrders();
 if(chartStatus) chartStatus.destroy();
@@ -366,16 +280,6 @@ chartStatus=new Chart(statusChart,{
 type:"bar",
 data:{labels:Object.keys(c),datasets:[{label:"Total Order",data:Object.values(c)}]}
 });
-}
-function resetFilter(){
-filterTanggal.value=""; filterBulan.value=""; searchOrder.value="";
-filterBadges.innerHTML="";
-renderAll();
-}
-function ubahStatus(i,val){
-orders[i].status=val;
-localStorage.setItem("orders",JSON.stringify(orders));
-renderAll();
 }
 </script>
 
